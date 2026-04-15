@@ -1,0 +1,16 @@
+{
+  "name": "Korean 151 Master Set",
+  "short_name": "151 Tracker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#0d0d0d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/Kjhsytbk/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
