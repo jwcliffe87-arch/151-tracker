@@ -158,10 +158,26 @@ button.card-btn {
 
 <script>
 
-/* SAFE SERVICE WORKER (for install only) */
+/* SERVICE WORKER */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
+
+/* CUSTOM CARDS (THE MISSING 3) */
+const customCards = {
+  181: {
+    name: "Snorlax",
+    img: "https://i.postimg.cc/9Qr4BCBh/snorlax.png"
+  },
+  183: {
+    name: "Mewtwo",
+    img: "https://i.postimg.cc/YCh4xMz1/mewtwo.png"
+  },
+  205: {
+    name: "Mew ex",
+    img: "https://i.postimg.cc/c41trQg1/mew.png"
+  }
+};
 
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
@@ -178,7 +194,7 @@ const names = {
   extra:"Extras"
 };
 
-/* LOAD CARDS (FORCE 1–210) */
+/* LOAD ALL 210 */
 async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
@@ -200,7 +216,6 @@ async function loadCards(){
   render();
 }
 
-/* SET VIEW */
 function setView(view){
   currentView=view;
 
@@ -210,7 +225,6 @@ function setView(view){
   render();
 }
 
-/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
@@ -241,13 +255,21 @@ function render(){
     if (saved[card.id].master) totalOwned++;
     if (saved[card.id].extra) totalOwned++;
 
+    const custom = customCards[card.num];
+
+    const name = custom
+      ? custom.name
+      : (card.data?.name || "Unknown");
+
     const div=document.createElement("div");
     div.className="card";
 
-    div.innerHTML=`<div>#${card.num} ${card.data?.name || "Unknown"}</div>`;
+    div.innerHTML=`<div>#${card.num} ${name}</div>`;
 
     const img=document.createElement("img");
-    img.src = card.data?.images?.small || "https://via.placeholder.com/200x280?text=Missing";
+    img.src = custom
+      ? custom.img
+      : (card.data?.images?.small || "https://via.placeholder.com/200x280?text=Missing");
 
     img.onclick=()=>{
       index=filtered.indexOf(card);
@@ -294,7 +316,6 @@ function render(){
   document.getElementById("fill").style.background = barColor;
 }
 
-/* ZOOM */
 function showZoom(){
   document.getElementById("zoomImg").src =
     filtered[index].data?.images?.large || "";
