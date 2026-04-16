@@ -405,6 +405,12 @@ overlay.addEventListener("touchend", e => {
   }
 });
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
+loadCards();
+  
 loadCards();
 
 </script>
