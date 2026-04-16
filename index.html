@@ -5,6 +5,9 @@
 <title>151 Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d0d">
+
 <style>
 body {
   font-family: Arial;
@@ -37,7 +40,6 @@ body {
   width: 0%;
 }
 
-/* TABS */
 .tabs {
   display: flex;
   gap: 5px;
@@ -62,7 +64,6 @@ body {
 #tab-master.active { background: #8e24aa; }
 #tab-extra.active { background: #1e88e5; }
 
-/* GRID */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -70,15 +71,25 @@ body {
   padding: 6px;
 }
 
-/* CARD */
 .card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   background: #1a1a1a;
   border-radius: 10px;
   padding: 6px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card div:first-child {
+  height: 48px;
+  font-size: 14px;
+  line-height: 1.2;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card img {
@@ -90,19 +101,6 @@ body {
   cursor: pointer;
 }
 
-.card div:first-child {
-  height: 48px;
-  font-size: 14px;
-  line-height: 1.2;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-
-  overflow: hidden;
-}
-  
-/* BUTTON */
 button.card-btn {
   margin-top: 4px;
   width: 100%;
@@ -112,11 +110,8 @@ button.card-btn {
   color: white;
 }
 
-.missing {
-  background: #444;
-}
+.missing { background: #444; }
 
-/* ZOOM */
 .overlay {
   position: fixed;
   top:0; left:0;
@@ -139,7 +134,7 @@ button.card-btn {
 <div class="header">
   <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
   <div id="totalText"></div>
-<div id="progress"></div>
+  <div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 </div>
 
@@ -158,13 +153,26 @@ button.card-btn {
 
 <script>
 
+/* SERVICE WORKER */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
 let filtered = [];
 let index = 0;
 
-/* SET VIEW */
+const totals = { normal:165, poke:165, master:165, extra:45 };
+
+const names = {
+  normal:"Normal",
+  poke:"Pokéball",
+  master:"Masterball",
+  extra:"Extras"
+};
+
 function setView(view){
   currentView=view;
 
@@ -174,7 +182,6 @@ function setView(view){
   render();
 }
 
-/* LOAD CARDS */
 async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
@@ -186,14 +193,13 @@ async function loadCards(){
   render();
 }
 
-/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
   filtered=[];
 
-  let count = 0;
-let totalOwned = 0;
+  let count=0;
+  let totalOwned=0;
 
   cards.forEach(card=>{
 
@@ -211,11 +217,12 @@ let totalOwned = 0;
     const owned = saved[card.id][currentView];
 
     if(owned) count++;
-if (saved[card.id].normal) totalOwned++;
-if (saved[card.id].poke) totalOwned++;
-if (saved[card.id].master) totalOwned++;
-if (saved[card.id].extra) totalOwned++;
-    
+
+    if (saved[card.id].normal) totalOwned++;
+    if (saved[card.id].poke) totalOwned++;
+    if (saved[card.id].master) totalOwned++;
+    if (saved[card.id].extra) totalOwned++;
+
     const div=document.createElement("div");
     div.className="card";
 
@@ -232,27 +239,18 @@ if (saved[card.id].extra) totalOwned++;
     div.appendChild(img);
 
     const btn=document.createElement("button");
-
     btn.className="card-btn "+(owned?"owned":"missing");
     btn.textContent = owned ? "✔" : "Needed";
 
-    /* 🎨 COLOUR LOGIC */
     let color = "#888";
     if (currentView === "poke") color = "#e53935";
     if (currentView === "master") color = "#8e24aa";
     if (currentView === "extra") color = "#1e88e5";
 
-    if (owned) {
-      btn.style.background = color;
-    }
+    if (owned) btn.style.background = color;
 
     btn.onclick=()=>{
-      if (!saved[card.id]) {
-        saved[card.id]={normal:false,poke:false,master:false,extra:false};
-      }
-
       saved[card.id][currentView] = !saved[card.id][currentView];
-
       localStorage.setItem("collection", JSON.stringify(saved));
       render();
     };
@@ -261,26 +259,15 @@ if (saved[card.id].extra) totalOwned++;
     grid.appendChild(div);
   });
 
-  let totalPerTab = 165;
-if (currentView === "extra") totalPerTab = 45;
+  document.getElementById("progress").innerHTML =
+    names[currentView] + ": " + count + " / " + totals[currentView];
 
-const viewNames = {
-  normal: "Normal",
-  poke: "Pokéball",
-  master: "Masterball",
-  extra: "Extras"
-};
-
-document.getElementById("progress").innerHTML =
-  viewNames[currentView] + ": " + count + " / " + totalPerTab;
-
-document.getElementById("totalText").innerHTML =
-  "TOTAL: " + totalOwned + " / 540";
+  document.getElementById("totalText").innerHTML =
+    "TOTAL: " + totalOwned + " / 540";
 
   document.getElementById("fill").style.width =
-    (count/filtered.length*100)+"%";
+    (count/totals[currentView]*100)+"%";
 
-  /* 🎨 BAR COLOUR */
   let barColor = "#888";
   if (currentView === "poke") barColor = "#e53935";
   if (currentView === "master") barColor = "#8e24aa";
@@ -289,7 +276,6 @@ document.getElementById("totalText").innerHTML =
   document.getElementById("fill").style.background = barColor;
 }
 
-/* ZOOM */
 function showZoom(){
   document.getElementById("zoomImg").src =
     filtered[index].data.images.large;
@@ -300,24 +286,6 @@ function showZoom(){
 document.getElementById("overlay").onclick=()=>{
   document.getElementById("overlay").style.display="none";
 };
-
-/* SWIPE */
-let startX=0;
-
-overlay.addEventListener("touchstart",e=>{
-  startX=e.touches[0].clientX;
-});
-
-overlay.addEventListener("touchend",e=>{
-  let diff=e.changedTouches[0].clientX-startX;
-
-  if(Math.abs(diff)>50){
-    if(diff<0) index=(index+1)%filtered.length;
-    else index=(index-1+filtered.length)%filtered.length;
-
-    showZoom();
-  }
-});
 
 loadCards();
 
