@@ -1,189 +1,172 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>151 Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d0d0d">
+<title>151 Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d0d0d;
-      color: white;
-      margin: 0;
-    }
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d0d">
 
-    .header {
-      padding: 8px;
-      text-align: center;
-    }
+<style>
+body {
+  font-family: Arial;
+  background:#0d0d0d;
+  color:white;
+  margin:0;
+}
 
-    #logo {
-      width: 100%;
-      max-width: 260px;
-      margin: 0 auto 10px auto;
-      display: block;
-    }
+.header {
+  padding:8px;
+  text-align:center;
+}
 
-    .bar {
-      height: 10px;
-      background: #333;
-      border-radius: 6px;
-      overflow: hidden;
-    }
+#logo {
+  width:100%;
+  max-width:260px;
+  margin:0 auto 10px auto;
+  display:block;
+}
 
-    .fill {
-      height: 100%;
-      width: 0%;
-      background: #888;
-    }
+.bar {
+  height:10px;
+  background:#333;
+  border-radius:6px;
+  overflow:hidden;
+}
 
-    .tabs {
-      display: flex;
-      gap: 5px;
-      padding: 6px;
-    }
+.fill {
+  height:100%;
+  width:0%;
+}
 
-    .tabs button {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 6px;
-      background: #333;
-      color: white;
-      font-size: 12px;
-    }
+.tabs {
+  display:flex;
+  gap:5px;
+  padding:6px;
+}
 
-    .tabs button.active {
-      box-shadow: 0 0 10px currentColor;
-    }
+.tabs button {
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+  background:#333;
+  color:white;
+}
 
-    #tab-normal.active { background: #888; }
-    #tab-poke.active { background: #e53935; }
-    #tab-master.active { background: #8e24aa; }
-    #tab-extra.active { background: #1e88e5; }
+.tabs button.active {
+  box-shadow:0 0 10px currentColor;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      padding: 6px;
-    }
+#tab-normal.active { background:#888; }
+#tab-poke.active { background:#e53935; }
+#tab-master.active { background:#8e24aa; }
+#tab-extra.active { background:#1e88e5; }
 
-    .card {
-      background: #1a1a1a;
-      border-radius: 10px;
-      padding: 6px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  padding:6px;
+}
 
-    .card div:first-child {
-      height: 48px;
-      font-size: 14px;
-      line-height: 1.2;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
+.card {
+  background:#1a1a1a;
+  border-radius:10px;
+  padding:6px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
 
-    .card img {
-      width: 100%;
-      height: 140px;
-      object-fit: contain;
-      background: black;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+.card div:first-child {
+  height:48px;
+  font-size:14px;
+  line-height:1.2;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
 
-    button.card-btn {
-      margin-top: 4px;
-      width: 100%;
-      padding: 6px;
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-size: 12px;
-    }
+.card img {
+  width:100%;
+  height:140px;
+  object-fit:contain;
+  background:black;
+  border-radius:6px;
+}
 
-    .missing {
-      background: #444;
-    }
+button.card-btn {
+  margin-top:4px;
+  width:100%;
+  padding:6px;
+  border:none;
+  border-radius:6px;
+  color:white;
+}
 
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.95);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
+.missing { background:#444; }
 
-    .overlay img {
-      width: 95%;
-      max-height: 95%;
-    }
-  </style>
+.overlay {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.95);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.overlay img {
+  width:95%;
+  max-height:95%;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="header">
-    <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
-    <div id="totalText"></div>
-    <div id="progress"></div>
-    <div class="bar"><div class="fill" id="fill"></div></div>
-  </div>
+<div class="header">
+  <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
+  <div id="totalText"></div>
+  <div id="progress"></div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+</div>
 
-  <div class="tabs">
-    <button id="tab-normal" onclick="setView('normal')">Normal</button>
-    <button id="tab-poke" onclick="setView('poke')">Pokéball</button>
-    <button id="tab-master" onclick="setView('master')">Masterball</button>
-    <button id="tab-extra" onclick="setView('extra')">Extras</button>
-  </div>
+<div class="tabs">
+  <button id="tab-normal" onclick="setView('normal')">Normal</button>
+  <button id="tab-poke" onclick="setView('poke')">Pokéball</button>
+  <button id="tab-master" onclick="setView('master')">Masterball</button>
+  <button id="tab-extra" onclick="setView('extra')">Extras</button>
+</div>
 
-  <div class="grid" id="grid"></div>
+<div class="grid" id="grid"></div>
 
-  <div class="overlay" id="overlay">
-    <img id="zoomImg">
-  </div>
+<script>
 
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js");
-    }
+let saved = JSON.parse(localStorage.getItem("collection")) || {};
+let cards = [];
+let currentView = "normal";
 
-    let saved = JSON.parse(localStorage.getItem("collection")) || {};
-    let cards = [];
-    let currentView = "normal";
-    let filtered = [];
-    let index = 0;
+const totals = {
+  normal:165,
+  poke:165,
+  master:165,
+  extra:45
+};
 
-    const totals = {
-      normal: 165,
-      poke: 165,
-      master: 165,
-      extra: 45
-    };
+const names = {
+  normal:"Normal",
+  poke:"Pokéball",
+  master:"Masterball",
+  extra:"Extras"
+};
 
-    const names = {
-      normal: "Normal",
-      poke: "Pokéball",
-      master: "Masterball",
-      extra: "Extras"
-    };
-
- async function loadCards(){
- async function loadCards(){
+/* SAFE LOAD (NO CRASH VERSION) */
+async function loadCards(){
   try {
     const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
     const data = await res.json();
@@ -200,129 +183,94 @@
     alert("Error loading cards");
     console.error(e);
   }
- }
+}
 
-    render();
+function setView(view){
+  currentView=view;
 
-  } catch (e) {
-    alert("Error loading cards");
-    console.error(e);
-  }
- }
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+view).classList.add("active");
 
-    function setView(view) {
-      currentView = view;
+  render();
+}
 
-      document.querySelectorAll(".tabs button").forEach(btn => {
-        btn.classList.remove("active");
-      });
+function render(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
 
-      document.getElementById("tab-" + view).classList.add("active");
+  let count=0;
+  let totalOwned=0;
+
+  cards.forEach(card=>{
+
+    const isExtra = parseInt(card.num) > 165;
+
+    if(currentView==="extra" && !isExtra) return;
+    if(currentView!=="extra" && isExtra) return;
+
+    if(!saved[card.id]){
+      saved[card.id]={normal:false,poke:false,master:false,extra:false};
+    }
+
+    const owned = saved[card.id][currentView];
+
+    if(owned) count++;
+
+    ["normal","poke","master","extra"].forEach(v=>{
+      if(saved[card.id][v]) totalOwned++;
+    });
+
+    const div=document.createElement("div");
+    div.className="card";
+
+    div.innerHTML=`<div>#${card.num} ${card.data.name}</div>`;
+
+    const img=document.createElement("img");
+    img.src = card.data.images.small;
+
+    div.appendChild(img);
+
+    const btn=document.createElement("button");
+    btn.className="card-btn "+(owned?"owned":"missing");
+    btn.textContent = owned ? "✔" : "Needed";
+
+    let color="#888";
+    if(currentView==="poke") color="#e53935";
+    if(currentView==="master") color="#8e24aa";
+    if(currentView==="extra") color="#1e88e5";
+
+    if(owned) btn.style.background=color;
+
+    btn.onclick=()=>{
+      saved[card.id][currentView]=!saved[card.id][currentView];
+      localStorage.setItem("collection",JSON.stringify(saved));
       render();
-    }
-
-    function render() {
-      const grid = document.getElementById("grid");
-      grid.innerHTML = "";
-      filtered = [];
-
-      let count = 0;
-      let totalOwned = 0;
-
-      cards.forEach(card => {
-        const cardNumber = parseInt(card.num, 10);
-        const isExtra = cardNumber > 165;
-
-        if (currentView === "extra" && !isExtra) return;
-        if (currentView !== "extra" && isExtra) return;
-
-        if (!saved[card.id]) {
-          saved[card.id] = {
-            normal: false,
-            poke: false,
-            master: false,
-            extra: false
-          };
-        }
-
-        filtered.push(card);
-
-        const owned = saved[card.id][currentView];
-
-        if (owned) count++;
-
-        if (saved[card.id].normal) totalOwned++;
-        if (saved[card.id].poke) totalOwned++;
-        if (saved[card.id].master) totalOwned++;
-        if (saved[card.id].extra) totalOwned++;
-
-        const div = document.createElement("div");
-        div.className = "card";
-
-        div.innerHTML = `<div>#${card.num} ${card.data.name}</div>`;
-
-        const img = document.createElement("img");
-        img.src = card.data.images.small;
-
-        img.onclick = () => {
-          index = filtered.indexOf(card);
-          showZoom();
-        };
-
-        div.appendChild(img);
-
-        const btn = document.createElement("button");
-        btn.className = "card-btn " + (owned ? "owned" : "missing");
-        btn.textContent = owned ? "✔" : "Needed";
-
-        let color = "#888";
-        if (currentView === "poke") color = "#e53935";
-        if (currentView === "master") color = "#8e24aa";
-        if (currentView === "extra") color = "#1e88e5";
-
-        if (owned) {
-          btn.style.background = color;
-        }
-
-        btn.onclick = () => {
-          saved[card.id][currentView] = !saved[card.id][currentView];
-          localStorage.setItem("collection", JSON.stringify(saved));
-          render();
-        };
-
-        div.appendChild(btn);
-        grid.appendChild(div);
-      });
-
-      document.getElementById("progress").innerHTML =
-        names[currentView] + ": " + count + " / " + totals[currentView];
-
-      document.getElementById("totalText").innerHTML =
-        "TOTAL: " + totalOwned + " / 540";
-
-      document.getElementById("fill").style.width =
-        (count / totals[currentView] * 100) + "%";
-
-      let barColor = "#888";
-      if (currentView === "poke") barColor = "#e53935";
-      if (currentView === "master") barColor = "#8e24aa";
-      if (currentView === "extra") barColor = "#1e88e5";
-
-      document.getElementById("fill").style.background = barColor;
-    }
-
-    function showZoom() {
-      document.getElementById("zoomImg").src =
-        filtered[index].data.images.large;
-      document.getElementById("overlay").style.display = "flex";
-    }
-
-    document.getElementById("overlay").onclick = () => {
-      document.getElementById("overlay").style.display = "none";
     };
 
-    loadCards();
-  </script>
+    div.appendChild(btn);
+    grid.appendChild(div);
+  });
+
+  document.getElementById("progress").innerHTML =
+    names[currentView]+" "+count+" / "+totals[currentView];
+
+  document.getElementById("totalText").innerHTML =
+    "TOTAL "+totalOwned+" / 540";
+
+  document.getElementById("fill").style.width =
+    (count/totals[currentView]*100)+"%";
+
+  let color="#888";
+  if(currentView==="poke") color="#e53935";
+  if(currentView==="master") color="#8e24aa";
+  if(currentView==="extra") color="#1e88e5";
+
+  document.getElementById("fill").style.background=color;
+}
+
+loadCards();
+
+</script>
 
 </body>
 </html>
