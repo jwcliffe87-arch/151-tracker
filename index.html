@@ -35,9 +35,9 @@ body {
 .fill {
   height: 100%;
   width: 0%;
-  background: #888;
 }
 
+/* TABS */
 .tabs {
   display: flex;
   gap: 5px;
@@ -62,6 +62,7 @@ body {
 #tab-master.active { background: #8e24aa; }
 #tab-extra.active { background: #1e88e5; }
 
+/* GRID */
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -69,6 +70,7 @@ body {
   padding: 6px;
 }
 
+/* CARD */
 .card {
   background: #1a1a1a;
   border-radius: 10px;
@@ -85,16 +87,14 @@ body {
   cursor: pointer;
 }
 
+/* BUTTON */
 button.card-btn {
   margin-top: 4px;
   width: 100%;
   padding: 6px;
   border: none;
   border-radius: 6px;
-}
-
-.owned {
-  background: #4caf50;
+  color: white;
 }
 
 .missing {
@@ -142,15 +142,13 @@ button.card-btn {
 
 <script>
 
-let saved = {};
+let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
 let filtered = [];
 let index = 0;
 
-/* RESET BROKEN DATA ONCE */
-saved = JSON.parse(localStorage.getItem("collection")) || {};
-
+/* SET VIEW */
 function setView(view){
   currentView=view;
 
@@ -160,6 +158,7 @@ function setView(view){
   render();
 }
 
+/* LOAD CARDS */
 async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
@@ -171,6 +170,7 @@ async function loadCards(){
   render();
 }
 
+/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
@@ -185,11 +185,15 @@ function render(){
     if(currentView==="extra" && !isExtra) return;
     if(currentView!=="extra" && isExtra) return;
 
-    if(!saved[card.id]) saved[card.id]={normal:false,poke:false,master:false,extra:false};
+    if(!saved[card.id]) {
+      saved[card.id]={normal:false,poke:false,master:false,extra:false};
+    }
 
     filtered.push(card);
 
-    if(saved[card.id][currentView]) count++;
+    const owned = saved[card.id][currentView];
+
+    if(owned) count++;
 
     const div=document.createElement("div");
     div.className="card";
@@ -208,42 +212,47 @@ function render(){
 
     const btn=document.createElement("button");
 
-    const owned = saved[card.id][currentView] === true;
-
     btn.className="card-btn "+(owned?"owned":"missing");
     btn.textContent = owned ? "✔" : "Needed";
 
-    btn.onclick = () => {
+    /* 🎨 COLOUR LOGIC */
+    let color = "#888";
+    if (currentView === "poke") color = "#e53935";
+    if (currentView === "master") color = "#8e24aa";
+    if (currentView === "extra") color = "#1e88e5";
 
-  // 🛠 ensure structure exists
-  if (!saved[card.id]) {
-    saved[card.id] = {
-      normal: false,
-      poke: false,
-      master: false,
-      extra: false
+    if (owned) {
+      btn.style.background = color;
+    }
+
+    btn.onclick=()=>{
+      if (!saved[card.id]) {
+        saved[card.id]={normal:false,poke:false,master:false,extra:false};
+      }
+
+      saved[card.id][currentView] = !saved[card.id][currentView];
+
+      localStorage.setItem("collection", JSON.stringify(saved));
+      render();
     };
-  }
-
-  // 🔥 toggle safely
-  saved[card.id][currentView] = !saved[card.id][currentView];
-
-  // 💾 save
-  localStorage.setItem("collection", JSON.stringify(saved));
-
-  // 🔄 refresh UI
-  render();
-};
 
     div.appendChild(btn);
     grid.appendChild(div);
   });
 
   document.getElementById("progress").innerHTML =
-    count + " cards collected";
+    count + " collected";
 
   document.getElementById("fill").style.width =
     (count/filtered.length*100)+"%";
+
+  /* 🎨 BAR COLOUR */
+  let barColor = "#888";
+  if (currentView === "poke") barColor = "#e53935";
+  if (currentView === "master") barColor = "#8e24aa";
+  if (currentView === "extra") barColor = "#1e88e5";
+
+  document.getElementById("fill").style.background = barColor;
 }
 
 /* ZOOM */
@@ -275,8 +284,7 @@ overlay.addEventListener("touchend",e=>{
     showZoom();
   }
 });
-  
-localStorage.removeItem("collection");
+
 loadCards();
 
 </script>
