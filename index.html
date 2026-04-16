@@ -243,7 +243,40 @@ function render(){
   document.getElementById("fill").style.background=color;
 }
 
-loadCards();
+async function loadCards(){
+  const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
+  const data = await res.json();
+
+  // Step 1: map API cards
+  let temp = data.data.map(c => ({
+    id: c.id,
+    num: parseInt(c.number),
+    data: c
+  }));
+
+  // 🔥 Step 2: REMOVE any problem cards (duplicates / wrong ones)
+  temp = temp.filter(c => {
+    const name = c.data.name.toLowerCase();
+    return !(
+      name.includes("snorlax") ||
+      name.includes("mewtwo") ||
+      name.includes("mew ex")
+    );
+  });
+
+  // 🔥 Step 3: ADD clean versions of the 3 cards
+  temp.push(
+    { id:"custom-181", num:181, data:{ name:"Snorlax", images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"} } },
+    { id:"custom-183", num:183, data:{ name:"Mewtwo", images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"} } },
+    { id:"custom-205", num:205, data:{ name:"Mew ex", images:{small:"https://i.postimg.cc/c41trQg1/mew.png"} } }
+  );
+
+  // Step 4: sort correctly
+  temp.sort((a,b)=>a.num-b.num);
+
+  cards = temp;
+  render();
+}
 
 </script>
 
