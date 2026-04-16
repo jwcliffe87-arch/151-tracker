@@ -20,13 +20,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
   display:block;
 }
 
-.bar {
-  height:10px;
-  background:#333;
-  border-radius:6px;
-  overflow:hidden;
-}
-
+.bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
 .fill { height:100%; width:0%; }
 
 .tabs {
@@ -44,9 +38,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
   color:white;
 }
 
-.tabs button.active {
-  box-shadow:0 0 10px currentColor;
-}
+.tabs button.active { box-shadow:0 0 10px currentColor; }
 
 #tab-normal.active { background:#888; }
 #tab-poke.active { background:#e53935; }
@@ -98,21 +90,6 @@ button.card-btn {
 }
 
 .missing { background:#444; }
-
-.overlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.95);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.overlay img {
-  width:95%;
-  max-height:95%;
-}
 </style>
 </head>
 
@@ -134,22 +111,13 @@ button.card-btn {
 
 <div class="grid" id="grid"></div>
 
-<div class="overlay" id="overlay">
-  <img id="zoomImg">
-</div>
-
 <script>
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
 
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
 
 const totals = { normal:165, poke:165, master:165, extra:45 };
-
 const names = {
   normal:"Normal",
   poke:"Pokéball",
@@ -157,28 +125,55 @@ const names = {
   extra:"Extras"
 };
 
-/* SAFE LOAD */
+/* 🔥 FINAL DATA BUILD */
 async function loadCards(){
-  try {
-    const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
-    const data = await res.json();
+  const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
+  const data = await res.json();
 
-    cards = data.data
-      .map(c => ({
-        id:c.id,
-        num:parseInt(c.number),
-        data:c
-      }))
-      .sort((a,b)=>a.num-b.num);
+  let temp = [];
 
-    render();
+  for (let i = 1; i <= 210; i++) {
 
-  } catch (e) {
-    alert("Error loading cards");
-    console.error(e);
+    const found = data.data.find(c => parseInt(c.number) === i);
+
+    if (found) {
+      temp.push({
+        id: found.id,
+        num: i,
+        data: found
+      });
+    } else {
+
+      // 🔥 ONLY insert these 3 missing cards
+      if (i === 181) {
+        temp.push({
+          id:"custom-181",
+          num:181,
+          data:{ name:"Snorlax", images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"} }
+        });
+      }
+      else if (i === 183) {
+        temp.push({
+          id:"custom-183",
+          num:183,
+          data:{ name:"Mewtwo", images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"} }
+        });
+      }
+      else if (i === 205) {
+        temp.push({
+          id:"custom-205",
+          num:205,
+          data:{ name:"Mew ex", images:{small:"https://i.postimg.cc/c41trQg1/mew.png"} }
+        });
+      }
+    }
   }
+
+  cards = temp;
+  render();
 }
 
+/* VIEW */
 function setView(view){
   currentView=view;
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
@@ -186,14 +181,16 @@ function setView(view){
   render();
 }
 
+/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0;
-  let totalOwned=0;
+  let count=0, totalOwned=0;
 
   cards.forEach(card=>{
+
+    if(!card.data) return;
 
     const isExtra = card.num > 165;
 
