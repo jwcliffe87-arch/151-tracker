@@ -186,10 +186,19 @@ async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
 
-  cards = data.data
-    .map(c => ({id:c.id, num:parseInt(c.number), data:c}))
-    .sort((a,b)=>a.num-b.num);
+  let temp = [];
 
+for (let i = 1; i <= 210; i++) {
+  const found = data.data.find(c => parseInt(c.number) === i);
+
+  temp.push({
+    id: found ? found.id : "missing-" + i,
+    num: i,
+    data: found || null
+  });
+}
+
+cards = temp;
   render();
 }
 
