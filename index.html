@@ -84,7 +84,13 @@ async function loadCards(){
   const data = await res.json();
 
   // 🔥 SORT BY ID (THIS IS THE REAL ORDER)
-  let sorted = data.data.sort((a,b)=> a.id.localeCompare(b.id));
+  let sorted = data.data.sort((a, b) => {
+  const aNum = a.data.number;
+  const bNum = b.data.number;
+
+  // handles numbers + letters correctly
+  return aNum.localeCompare(bNum, undefined, { numeric: true, sensitivity: 'base' });
+});
 
   // 🔥 SPLIT INTO MAIN + EXTRAS
   let main = sorted.slice(0,165);
