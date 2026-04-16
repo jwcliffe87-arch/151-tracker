@@ -152,11 +152,25 @@ async function loadCards(){
   }));
 
   // ADD missing 3 cards if needed
-  [181,183,205].forEach(n=>{
-    if(!temp.find(c=>c.num===n)){
-      temp.push({id:"custom-"+n, num:n, data:null});
-    }
-  });
+  const needed = [
+  { num:181, name:"Snorlax" },
+  { num:183, name:"Mewtwo" },
+  { num:205, name:"Mew ex" }
+];
+
+needed.forEach(card => {
+  const exists = temp.find(c =>
+    c.data?.name?.toLowerCase().includes(card.name.toLowerCase())
+  );
+
+  if (!exists) {
+    temp.push({
+      id: "custom-" + card.num,
+      num: card.num,
+      data: null
+    });
+  }
+});
 
   temp.sort((a,b)=>a.num-b.num);
 
