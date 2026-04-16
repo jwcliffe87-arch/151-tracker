@@ -123,7 +123,8 @@ button.card-btn {
 
 <div class="header">
   <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
-  <div id="progress"></div>
+  <div id="totalText"></div>
+<div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 </div>
 
@@ -176,7 +177,8 @@ function render(){
   grid.innerHTML="";
   filtered=[];
 
-  let count=0;
+  let count = 0;
+let totalOwned = 0;
 
   cards.forEach(card=>{
 
@@ -194,7 +196,11 @@ function render(){
     const owned = saved[card.id][currentView];
 
     if(owned) count++;
-
+if (saved[card.id].normal) totalOwned++;
+if (saved[card.id].poke) totalOwned++;
+if (saved[card.id].master) totalOwned++;
+if (saved[card.id].extra) totalOwned++;
+    
     const div=document.createElement("div");
     div.className="card";
 
@@ -240,8 +246,15 @@ function render(){
     grid.appendChild(div);
   });
 
-  document.getElementById("progress").innerHTML =
-    count + " collected";
+  let totalPerTab = 165;
+if (currentView === "extra") totalPerTab = 45;
+
+document.getElementById("progress").innerHTML =
+  currentView.charAt(0).toUpperCase() + currentView.slice(1) +
+  ": " + count + " / " + totalPerTab;
+
+document.getElementById("totalText").innerHTML =
+  "TOTAL: " + totalOwned + " / 540";
 
   document.getElementById("fill").style.width =
     (count/filtered.length*100)+"%";
