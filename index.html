@@ -7,6 +7,7 @@
 
 <style>
 body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
+
 .header { padding:8px; text-align:center; }
 
 #logo {
@@ -122,57 +123,49 @@ async function loadCards(){
     const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
     const data = await res.json();
 
-    // STEP 1: sort properly
-    let sorted = data.data.sort((a, b) => {
-      return a.number.localeCompare(b.number, undefined, {
-        numeric: true,
-        sensitivity: 'base'
+    cards = [];
+
+    // ADD API CARDS
+    data.data.forEach(c => {
+      cards.push({
+        id: c.id,
+        num: parseInt(c.number) || 0,
+        data: c
       });
     });
 
-    // STEP 2: map cards normally
-    cards = sorted.map(c => ({
-      id: c.id,
-      num: parseInt(c.number),
-      data: c
-    }));
-
-    // STEP 3: ADD missing cards (no duplicates)
-    if (!cards.find(c => c.data.name === "Snorlax")) {
-      cards.push({
+    // ADD MISSING CARDS (always)
+    cards.push(
+      {
         id: "snorlax",
         num: 181,
         data: {
           name: "Snorlax",
           images: { small: "https://i.postimg.cc/9Qr4BCBh/snorlax.png" }
         }
-      });
-    }
-
-    if (!cards.find(c => c.data.name === "Mewtwo")) {
-      cards.push({
+      },
+      {
         id: "mewtwo",
         num: 183,
         data: {
           name: "Mewtwo",
           images: { small: "https://i.postimg.cc/YCh4xMz1/mewtwo.png" }
         }
-      });
-    }
-
-    if (!cards.find(c => c.data.name === "Mew ex")) {
-      cards.push({
+      },
+      {
         id: "mewex",
         num: 205,
         data: {
           name: "Mew ex",
           images: { small: "https://i.postimg.cc/c41trQg1/mew.png" }
         }
-      });
-    }
+      }
+    );
 
-    // STEP 4: sort again after adding them
-    cards.sort((a, b) => a.num - b.num);
+    // SAFE SORT
+    cards.sort(function(a,b){
+      return a.num - b.num;
+    });
 
     render();
 
@@ -182,13 +175,12 @@ async function loadCards(){
   }
 }
 
-  render();
-}
-
 function setView(view){
   currentView=view;
+
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+view).classList.add("active");
+
   render();
 }
 
@@ -196,7 +188,8 @@ function render(){
   const grid=document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0,totalOwned=0;
+  let count=0;
+  let totalOwned=0;
 
   cards.forEach(card=>{
 
@@ -210,6 +203,7 @@ function render(){
     }
 
     const owned = saved[card.id][currentView];
+
     if(owned) count++;
 
     ["normal","poke","master","extra"].forEach(v=>{
@@ -222,13 +216,13 @@ function render(){
     div.innerHTML=`<div>#${card.num} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
-    img.src=card.data.images.small;
+    img.src = card.data.images.small;
 
     div.appendChild(img);
 
     const btn=document.createElement("button");
     btn.className="card-btn "+(owned?"owned":"missing");
-    btn.textContent=owned?"✔":"Needed";
+    btn.textContent = owned ? "✔" : "Needed";
 
     let color="#888";
     if(currentView==="poke") color="#e53935";
@@ -255,6 +249,13 @@ function render(){
 
   document.getElementById("fill").style.width =
     (count/totals[currentView]*100)+"%";
+
+  let color="#888";
+  if(currentView==="poke") color="#e53935";
+  if(currentView==="master") color="#8e24aa";
+  if(currentView==="extra") color="#1e88e5";
+
+  document.getElementById("fill").style.background=color;
 }
 
 loadCards();
