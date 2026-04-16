@@ -5,21 +5,9 @@
 <title>151 Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d0d0d">
-
 <style>
-body {
-  font-family: Arial;
-  background:#0d0d0d;
-  color:white;
-  margin:0;
-}
-
-.header {
-  padding:8px;
-  text-align:center;
-}
+body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
+.header { padding:8px; text-align:center; }
 
 #logo {
   width:100%;
@@ -28,23 +16,10 @@ body {
   display:block;
 }
 
-.bar {
-  height:10px;
-  background:#333;
-  border-radius:6px;
-  overflow:hidden;
-}
+.bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
+.fill { height:100%; width:0%; }
 
-.fill {
-  height:100%;
-  width:0%;
-}
-
-.tabs {
-  display:flex;
-  gap:5px;
-  padding:6px;
-}
+.tabs { display:flex; gap:5px; padding:6px; }
 
 .tabs button {
   flex:1;
@@ -55,9 +30,7 @@ body {
   color:white;
 }
 
-.tabs button.active {
-  box-shadow:0 0 10px currentColor;
-}
+.tabs button.active { box-shadow:0 0 10px currentColor; }
 
 #tab-normal.active { background:#888; }
 #tab-poke.active { background:#e53935; }
@@ -109,21 +82,6 @@ button.card-btn {
 }
 
 .missing { background:#444; }
-
-.overlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.95);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.overlay img {
-  width:95%;
-  max-height:95%;
-}
 </style>
 </head>
 
@@ -151,13 +109,7 @@ let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
 
-const totals = {
-  normal:165,
-  poke:165,
-  master:165,
-  extra:45
-};
-
+const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = {
   normal:"Normal",
   poke:"Pokéball",
@@ -165,32 +117,63 @@ const names = {
   extra:"Extras"
 };
 
-/* SAFE LOAD (NO CRASH VERSION) */
 async function loadCards(){
-  try {
-    const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
-    const data = await res.json();
+  const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
+  const data = await res.json();
 
-    cards = data.data.map(c => ({
-      id: c.id,
-      num: c.number,
-      data: c
-    }));
+  // map API cards by number
+  const map = {};
+  data.data.forEach(c => {
+    map[c.number] = c;
+  });
 
-    render();
+  cards = [];
 
-  } catch (e) {
-    alert("Error loading cards");
-    console.error(e);
+  for (let i = 1; i <= 210; i++) {
+
+    let card = map[i];
+
+    // manual fixes
+    if (!card && i === 181) {
+      card = {
+        id:"snorlax",
+        name:"Snorlax",
+        images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}
+      };
+    }
+
+    if (!card && i === 183) {
+      card = {
+        id:"mewtwo",
+        name:"Mewtwo",
+        images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}
+      };
+    }
+
+    if (!card && i === 205) {
+      card = {
+        id:"mewex",
+        name:"Mew ex",
+        images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}
+      };
+    }
+
+    if (card) {
+      cards.push({
+        id: card.id || "custom-"+i,
+        num: i,
+        data: card
+      });
+    }
   }
+
+  render();
 }
 
 function setView(view){
   currentView=view;
-
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+view).classList.add("active");
-
   render();
 }
 
@@ -198,12 +181,11 @@ function render(){
   const grid=document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0;
-  let totalOwned=0;
+  let count=0,totalOwned=0;
 
   cards.forEach(card=>{
 
-    const isExtra = parseInt(card.num) > 165;
+    const isExtra = card.num > 165;
 
     if(currentView==="extra" && !isExtra) return;
     if(currentView!=="extra" && isExtra) return;
@@ -213,7 +195,6 @@ function render(){
     }
 
     const owned = saved[card.id][currentView];
-
     if(owned) count++;
 
     ["normal","poke","master","extra"].forEach(v=>{
@@ -226,13 +207,13 @@ function render(){
     div.innerHTML=`<div>#${card.num} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
-    img.src = card.data.images.small;
+    img.src=card.data.images.small;
 
     div.appendChild(img);
 
     const btn=document.createElement("button");
     btn.className="card-btn "+(owned?"owned":"missing");
-    btn.textContent = owned ? "✔" : "Needed";
+    btn.textContent=owned?"✔":"Needed";
 
     let color="#888";
     if(currentView==="poke") color="#e53935";
@@ -259,13 +240,6 @@ function render(){
 
   document.getElementById("fill").style.width =
     (count/totals[currentView]*100)+"%";
-
-  let color="#888";
-  if(currentView==="poke") color="#e53935";
-  if(currentView==="master") color="#8e24aa";
-  if(currentView==="extra") color="#1e88e5";
-
-  document.getElementById("fill").style.background=color;
 }
 
 loadCards();
