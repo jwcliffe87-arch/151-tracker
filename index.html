@@ -187,56 +187,52 @@
     const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
     const data = await res.json();
 
-    // STEP 1: sort properly using real card numbers
-    let sorted = data.data.sort((a, b) => {
-      return a.number.localeCompare(b.number, undefined, {
-        numeric: true,
-        sensitivity: 'base'
-      });
+    // create lookup by number
+    const map = {};
+    data.data.forEach(c => {
+      map[c.number] = c;
     });
 
-    // STEP 2: map WITHOUT changing numbers
-    cards = sorted.map(c => ({
-      id: c.id,
-      num: c.number,
-      data: c
-    }));
+    cards = [];
 
-    // STEP 3: ADD the 3 missing cards at correct positions
-    cards.push(
-      {
-        id: "snorlax",
-        num: "181",
-        data: {
+    for (let i = 1; i <= 210; i++) {
+
+      let key = String(i);
+      let found = map[key];
+
+      // 🔥 manual fixes for missing promos
+      if (!found && i === 181) {
+        found = {
+          id: "snorlax",
           name: "Snorlax",
           images: { small: "https://i.postimg.cc/9Qr4BCBh/snorlax.png" }
-        }
-      },
-      {
-        id: "mewtwo",
-        num: "183",
-        data: {
+        };
+      }
+
+      if (!found && i === 183) {
+        found = {
+          id: "mewtwo",
           name: "Mewtwo",
           images: { small: "https://i.postimg.cc/YCh4xMz1/mewtwo.png" }
-        }
-      },
-      {
-        id: "mewex",
-        num: "205",
-        data: {
+        };
+      }
+
+      if (!found && i === 205) {
+        found = {
+          id: "mewex",
           name: "Mew ex",
           images: { small: "https://i.postimg.cc/c41trQg1/mew.png" }
-        }
+        };
       }
-    );
 
-    // STEP 4: SORT AGAIN after adding them
-    cards.sort((a, b) => {
-      return a.num.localeCompare(b.num, undefined, {
-        numeric: true,
-        sensitivity: 'base'
-      });
-    });
+      if (found) {
+        cards.push({
+          id: found.id || "custom-" + i,
+          num: i,
+          data: found
+        });
+      }
+    }
 
     render();
 
