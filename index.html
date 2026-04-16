@@ -213,11 +213,18 @@ function render(){
     btn.className="card-btn "+(owned?"owned":"missing");
     btn.textContent = owned ? "✔" : "Needed";
 
-    btn.onclick=()=>{
-      saved[card.id][currentView] = !saved[card.id][currentView];
-      localStorage.setItem("collection", JSON.stringify(saved));
-      render();
-    };
+    btn.onclick = () => {
+
+  if (!saved[card.id]) {
+    saved[card.id] = { normal:false, poke:false, master:false, extra:false };
+  }
+
+  saved[card.id][currentView] = saved[card.id][currentView] ? false : true;
+
+  localStorage.setItem("collection", JSON.stringify(saved));
+
+  render();
+};
 
     div.appendChild(btn);
     grid.appendChild(div);
