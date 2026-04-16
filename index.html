@@ -5,39 +5,19 @@
 <title>151 Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d0d0d">
-
 <style>
 body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
-
 .header { padding:8px; text-align:center; }
-
-#logo {
-  width:100%;
-  max-width:260px;
-  margin:0 auto 10px auto;
-  display:block;
-}
+#logo { width:100%; max-width:260px; margin:0 auto 10px auto; display:block; }
 
 .bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
 .fill { height:100%; width:0%; }
 
-.tabs {
-  display:flex;
-  gap:5px;
-  padding:6px;
-}
-
+.tabs { display:flex; gap:5px; padding:6px; }
 .tabs button {
-  flex:1;
-  padding:8px;
-  border:none;
-  border-radius:6px;
-  background:#333;
-  color:white;
+  flex:1; padding:8px; border:none; border-radius:6px;
+  background:#333; color:white;
 }
-
 .tabs button.active { box-shadow:0 0 10px currentColor; }
 
 #tab-normal.active { background:#888; }
@@ -125,55 +105,48 @@ const names = {
   extra:"Extras"
 };
 
-/* 🔥 FINAL DATA BUILD */
 async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
 
-  let temp = [];
+  cards = [];
 
   for (let i = 1; i <= 210; i++) {
 
-    const found = data.data.find(c => parseInt(c.number) === i);
+    let found = data.data.find(c => parseInt(c.number) === i);
 
-    if (found) {
-      temp.push({
-        id: found.id,
-        num: i,
-        data: found
-      });
-    } else {
-
-      // 🔥 ONLY insert these 3 missing cards
-      if (i === 181) {
-        temp.push({
-          id:"custom-181",
-          num:181,
-          data:{ name:"Snorlax", images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"} }
-        });
-      }
-      else if (i === 183) {
-        temp.push({
-          id:"custom-183",
-          num:183,
-          data:{ name:"Mewtwo", images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"} }
-        });
-      }
-      else if (i === 205) {
-        temp.push({
-          id:"custom-205",
-          num:205,
-          data:{ name:"Mew ex", images:{small:"https://i.postimg.cc/c41trQg1/mew.png"} }
-        });
-      }
+    // 🔥 manual fixes for the 3 missing ones
+    if (!found && i === 181) {
+      found = {
+        name:"Snorlax",
+        images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}
+      };
     }
+
+    if (!found && i === 183) {
+      found = {
+        name:"Mewtwo",
+        images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}
+      };
+    }
+
+    if (!found && i === 205) {
+      found = {
+        name:"Mew ex",
+        images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}
+      };
+    }
+
+    cards.push({
+      id: found?.id || "custom-"+i,
+      num: i,
+      data: found
+    });
   }
 
-  cards = temp;
   render();
 }
 
-/* VIEW */
 function setView(view){
   currentView=view;
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
@@ -181,12 +154,12 @@ function setView(view){
   render();
 }
 
-/* RENDER */
 function render(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0, totalOwned=0;
+  let count=0;
+  let totalOwned=0;
 
   cards.forEach(card=>{
 
