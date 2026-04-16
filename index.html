@@ -264,9 +264,15 @@ if (saved[card.id].extra) totalOwned++;
   let totalPerTab = 165;
 if (currentView === "extra") totalPerTab = 45;
 
+const viewNames = {
+  normal: "Normal",
+  poke: "Pokéball",
+  master: "Masterball",
+  extra: "Extras"
+};
+
 document.getElementById("progress").innerHTML =
-  currentView.charAt(0).toUpperCase() + currentView.slice(1) +
-  ": " + count + " / " + totalPerTab;
+  viewNames[currentView] + ": " + count + " / " + totalPerTab;
 
 document.getElementById("totalText").innerHTML =
   "TOTAL: " + totalOwned + " / 540";
