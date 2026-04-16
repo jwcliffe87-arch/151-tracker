@@ -5,9 +5,6 @@
 <title>151 Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d0d0d">
-
 <style>
 body {
   font-family: Arial;
@@ -17,19 +14,16 @@ body {
 }
 
 .header {
-  padding: 6px;
+  padding: 8px;
   text-align: center;
 }
 
 #logo {
   width: 100%;
   max-width: 260px;
-  margin: 0 auto 8px auto;
+  margin: 0 auto 10px auto;
   display: block;
 }
-
-#totalText { font-size: 14px; color: #aaa; }
-#progressText { font-size: 18px; font-weight: bold; margin-bottom: 6px; }
 
 .bar {
   height: 10px;
@@ -41,7 +35,7 @@ body {
 .fill {
   height: 100%;
   width: 0%;
-  transition: 0.3s;
+  background: #888;
 }
 
 .tabs {
@@ -101,15 +95,13 @@ button.card-btn {
 
 .owned {
   background: #4caf50;
-  color: white;
 }
 
 .missing {
   background: #444;
-  color: white;
 }
 
-/* OVERLAY */
+/* ZOOM */
 .overlay {
   position: fixed;
   top:0; left:0;
@@ -118,22 +110,11 @@ button.card-btn {
   display:none;
   justify-content:center;
   align-items:center;
-  z-index:999;
-  opacity:0;
-  transition:0.25s;
 }
-
-.overlay.show { opacity:1; }
 
 .overlay img {
   width:95%;
   max-height:95%;
-  transform:scale(0.9);
-  transition:0.25s;
-}
-
-.overlay.show img {
-  transform:scale(1);
 }
 </style>
 </head>
@@ -142,8 +123,7 @@ button.card-btn {
 
 <div class="header">
   <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
-  <div id="totalText"></div>
-  <div id="progressText"></div>
+  <div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 </div>
 
@@ -162,55 +142,21 @@ button.card-btn {
 
 <script>
 
-/* SERVICE WORKER */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
-
-let saved = JSON.parse(localStorage.getItem("collection")) || {};
+let saved = {};
 let cards = [];
 let currentView = "normal";
+let filtered = [];
+let index = 0;
 
-let filteredCards = [];
-let currentIndex = 0;
-let startX = 0;
-
-const totals = {
-  normal:165, poke:165, master:165, extra:45
-};
-
-const names = {
-  normal:"Normal",
-  poke:"Pokéball",
-  master:"Masterball",
-  extra:"Extras"
-};
-
-/* ORDER */
-const numberMap = {
-  162:152,159:153,152:154,154:155,153:156,163:157,
-  164:158,155:159,165:160,161:163,156:164,157:165,
-  181:182,208:181,209:183,182:184,183:185,184:186,
-  185:187,186:188,187:189,188:190,189:191,190:192,
-  191:193,192:194,193:195,194:199,195:196,196:197,
-  197:198,198:200,199:201,200:202,201:203,202:204,
-  203:206,204:207,205:208,206:209,207:210,210:205
-};
-
-const overrides = {158:161,160:162};
-
-/* FIX DATA */
-function fixSaved(id){
-  if (!saved[id]) saved[id] = {};
-  ["normal","poke","master","extra"].forEach(k=>{
-    if (typeof saved[id][k] !== "boolean") saved[id][k] = false;
-  });
-}
+/* RESET BROKEN DATA ONCE */
+saved = JSON.parse(localStorage.getItem("collection")) || {};
 
 function setView(view){
   currentView=view;
+
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+view).classList.add("active");
+
   render();
 }
 
@@ -218,64 +164,57 @@ async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
 
-  let temp=[];
+  cards = data.data
+    .map(c => ({id:c.id, num:parseInt(c.number), data:c}))
+    .sort((a,b)=>a.num-b.num);
 
-  for(let i=1;i<=210;i++){
-    const found = data.data.find(c=>parseInt(c.number)===i);
-    let display = overrides[i] || numberMap[i] || i;
-    temp.push({original:i, display, data:found||null});
-  }
-
-  cards=temp.sort((a,b)=>a.display-b.display);
-  setView("normal");
+  render();
 }
 
 function render(){
-  const grid=document.getElementById("grid");
+  const grid = document.getElementById("grid");
   grid.innerHTML="";
+  filtered=[];
 
-  let count=0, totalOwned=0;
-  filteredCards=[];
+  let count=0;
 
   cards.forEach(card=>{
 
-    const isMain = card.display<=165;
-    if (currentView==="extra" && isMain) return;
-    if (currentView!=="extra" && !isMain) return;
+    const isExtra = card.num > 165;
 
-    const id = card.data ? card.data.id : "missing-"+card.original;
+    if(currentView==="extra" && !isExtra) return;
+    if(currentView!=="extra" && isExtra) return;
 
-    fixSaved(id);
-    filteredCards.push(card);
+    if(!saved[card.id]) saved[card.id]={normal:false,poke:false,master:false,extra:false};
 
-    const isOwned = saved[id][currentView] === true;
+    filtered.push(card);
 
-    if (isOwned) count++;
-
-    ["normal","poke","master","extra"].forEach(k=>{
-      if(saved[id][k]) totalOwned++;
-    });
+    if(saved[card.id][currentView]) count++;
 
     const div=document.createElement("div");
     div.className="card";
-    div.innerHTML=`<div>#${card.display} ${card.data?.name||"Unknown"}</div>`;
+
+    div.innerHTML=`<div>#${card.num} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
-    img.src = card.data?.images?.small || "";
+    img.src=card.data.images.small;
 
     img.onclick=()=>{
-      currentIndex = filteredCards.findIndex(c=>c.display===card.display);
+      index=filtered.indexOf(card);
       showZoom();
     };
 
     div.appendChild(img);
 
     const btn=document.createElement("button");
-    btn.className="card-btn "+(isOwned?"owned":"missing");
-    btn.textContent = isOwned?"✔":"Needed";
+
+    const owned = saved[card.id][currentView] === true;
+
+    btn.className="card-btn "+(owned?"owned":"missing");
+    btn.textContent = owned ? "✔" : "Needed";
 
     btn.onclick=()=>{
-      saved[id][currentView] = !saved[id][currentView];
+      saved[card.id][currentView] = !saved[card.id][currentView];
       localStorage.setItem("collection", JSON.stringify(saved));
       render();
     };
@@ -284,46 +223,38 @@ function render(){
     grid.appendChild(div);
   });
 
-  document.getElementById("progressText").innerHTML =
-    names[currentView]+" "+count+" / "+totals[currentView];
-
-  document.getElementById("totalText").innerHTML =
-    "TOTAL: "+totalOwned+" / 540";
+  document.getElementById("progress").innerHTML =
+    count + " cards collected";
 
   document.getElementById("fill").style.width =
-    (count/totals[currentView]*100)+"%";
+    (count/filtered.length*100)+"%";
 }
 
 /* ZOOM */
 function showZoom(){
-  const card = filteredCards[currentIndex];
   document.getElementById("zoomImg").src =
-    card.data?.images?.large || card.data?.images?.small;
+    filtered[index].data.images.large;
 
-  const o=document.getElementById("overlay");
-  o.style.display="flex";
-  setTimeout(()=>o.classList.add("show"),10);
+  document.getElementById("overlay").style.display="flex";
 }
 
 document.getElementById("overlay").onclick=()=>{
-  const o=document.getElementById("overlay");
-  o.classList.remove("show");
-  setTimeout(()=>o.style.display="none",200);
+  document.getElementById("overlay").style.display="none";
 };
 
 /* SWIPE */
-const overlay=document.getElementById("overlay");
+let startX=0;
 
 overlay.addEventListener("touchstart",e=>{
   startX=e.touches[0].clientX;
 });
 
 overlay.addEventListener("touchend",e=>{
-  const diff=e.changedTouches[0].clientX-startX;
+  let diff=e.changedTouches[0].clientX-startX;
 
   if(Math.abs(diff)>50){
-    if(diff<0) currentIndex=(currentIndex+1)%filteredCards.length;
-    else currentIndex=(currentIndex-1+filteredCards.length)%filteredCards.length;
+    if(diff<0) index=(index+1)%filtered.length;
+    else index=(index-1+filtered.length)%filtered.length;
 
     showZoom();
   }
