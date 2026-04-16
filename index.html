@@ -182,12 +182,12 @@
       extra: "Extras"
     };
 
-    async function loadCards(){
+ async function loadCards(){
   try {
     const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
     const data = await res.json();
 
-    // STEP 1: sort safely
+    // STEP 1: sort properly using real card numbers
     let sorted = data.data.sort((a, b) => {
       return a.number.localeCompare(b.number, undefined, {
         numeric: true,
@@ -195,38 +195,34 @@
       });
     });
 
-    // STEP 2: assign clean numbers
-    cards = [];
+    // STEP 2: map WITHOUT changing numbers
+    cards = sorted.map(c => ({
+      id: c.id,
+      num: c.number,
+      data: c
+    }));
 
-    sorted.forEach((c, i) => {
-      cards.push({
-        id: c.id,
-        num: i + 1,
-        data: c
-      });
-    });
-
-    // STEP 3: add missing promos at the end
+    // STEP 3: ADD the 3 missing cards at correct positions
     cards.push(
       {
-        id: "promo-snorlax",
-        num: cards.length + 1,
+        id: "snorlax",
+        num: "181",
         data: {
           name: "Snorlax",
           images: { small: "https://i.postimg.cc/9Qr4BCBh/snorlax.png" }
         }
       },
       {
-        id: "promo-mewtwo",
-        num: cards.length + 2,
+        id: "mewtwo",
+        num: "183",
         data: {
           name: "Mewtwo",
           images: { small: "https://i.postimg.cc/YCh4xMz1/mewtwo.png" }
         }
       },
       {
-        id: "promo-mew",
-        num: cards.length + 3,
+        id: "mewex",
+        num: "205",
         data: {
           name: "Mew ex",
           images: { small: "https://i.postimg.cc/c41trQg1/mew.png" }
@@ -234,13 +230,21 @@
       }
     );
 
+    // STEP 4: SORT AGAIN after adding them
+    cards.sort((a, b) => {
+      return a.num.localeCompare(b.num, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      });
+    });
+
     render();
 
   } catch (e) {
     alert("Error loading cards");
     console.error(e);
   }
-}
+ }
 
     function setView(view) {
       currentView = view;
