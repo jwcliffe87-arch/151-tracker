@@ -183,57 +183,16 @@
     };
 
  async function loadCards(){
+ async function loadCards(){
   try {
     const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
     const data = await res.json();
 
-    // 🔥 sort safely (best we can get)
-    let sorted = data.data.sort((a, b) => {
-      return a.number.localeCompare(b.number, undefined, {
-        numeric: true,
-        sensitivity: 'base'
-      });
-    });
-
-    // 🔥 split set
-    let main = sorted.slice(0, 165);
-    let extras = sorted.slice(165);
-
-    // 🔥 remove any weird duplicates of promos
-    extras = extras.filter(c => {
-      const name = c.name.toLowerCase();
-      return !(
-        name.includes("snorlax") ||
-        name.includes("mewtwo") ||
-        name.includes("mew ex")
-      );
-    });
-
-    // 🔥 add clean versions of promos
-    extras.push(
-      { id:"snorlax", name:"Snorlax", images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"} },
-      { id:"mewtwo", name:"Mewtwo", images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"} },
-      { id:"mewex", name:"Mew ex", images:{small:"https://i.postimg.cc/c41trQg1/mew.png"} }
-    );
-
-    // 🔥 rebuild list with clean numbering
-    cards = [];
-
-    main.forEach((c, i) => {
-      cards.push({
-        id: c.id,
-        num: i + 1,
-        data: c
-      });
-    });
-
-    extras.forEach((c, i) => {
-      cards.push({
-        id: c.id,
-        num: 166 + i,
-        data: c
-      });
-    });
+    cards = data.data.map(c => ({
+      id: c.id,
+      num: c.number,
+      data: c
+    }));
 
     render();
 
