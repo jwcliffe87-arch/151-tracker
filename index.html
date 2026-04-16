@@ -118,54 +118,69 @@ const names = {
 };
 
 async function loadCards(){
-  const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
-  const data = await res.json();
+  try {
+    const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
+    const data = await res.json();
 
-  // map API cards by number
-  const map = {};
-  data.data.forEach(c => {
-    map[c.number] = c;
-  });
+    // STEP 1: sort properly
+    let sorted = data.data.sort((a, b) => {
+      return a.number.localeCompare(b.number, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      });
+    });
 
-  cards = [];
+    // STEP 2: map cards normally
+    cards = sorted.map(c => ({
+      id: c.id,
+      num: parseInt(c.number),
+      data: c
+    }));
 
-  for (let i = 1; i <= 210; i++) {
-
-    let card = map[i];
-
-    // manual fixes
-    if (!card && i === 181) {
-      card = {
-        id:"snorlax",
-        name:"Snorlax",
-        images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}
-      };
-    }
-
-    if (!card && i === 183) {
-      card = {
-        id:"mewtwo",
-        name:"Mewtwo",
-        images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}
-      };
-    }
-
-    if (!card && i === 205) {
-      card = {
-        id:"mewex",
-        name:"Mew ex",
-        images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}
-      };
-    }
-
-    if (card) {
+    // STEP 3: ADD missing cards (no duplicates)
+    if (!cards.find(c => c.data.name === "Snorlax")) {
       cards.push({
-        id: card.id || "custom-"+i,
-        num: i,
-        data: card
+        id: "snorlax",
+        num: 181,
+        data: {
+          name: "Snorlax",
+          images: { small: "https://i.postimg.cc/9Qr4BCBh/snorlax.png" }
+        }
       });
     }
+
+    if (!cards.find(c => c.data.name === "Mewtwo")) {
+      cards.push({
+        id: "mewtwo",
+        num: 183,
+        data: {
+          name: "Mewtwo",
+          images: { small: "https://i.postimg.cc/YCh4xMz1/mewtwo.png" }
+        }
+      });
+    }
+
+    if (!cards.find(c => c.data.name === "Mew ex")) {
+      cards.push({
+        id: "mewex",
+        num: 205,
+        data: {
+          name: "Mew ex",
+          images: { small: "https://i.postimg.cc/c41trQg1/mew.png" }
+        }
+      });
+    }
+
+    // STEP 4: sort again after adding them
+    cards.sort((a, b) => a.num - b.num);
+
+    render();
+
+  } catch (e) {
+    alert("Error loading cards");
+    console.error(e);
   }
+}
 
   render();
 }
