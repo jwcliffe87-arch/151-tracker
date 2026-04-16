@@ -215,14 +215,23 @@ function render(){
 
     btn.onclick = () => {
 
+  // 🛠 ensure structure exists
   if (!saved[card.id]) {
-    saved[card.id] = { normal:false, poke:false, master:false, extra:false };
+    saved[card.id] = {
+      normal: false,
+      poke: false,
+      master: false,
+      extra: false
+    };
   }
 
-  saved[card.id][currentView] = saved[card.id][currentView] ? false : true;
+  // 🔥 toggle safely
+  saved[card.id][currentView] = !saved[card.id][currentView];
 
+  // 💾 save
   localStorage.setItem("collection", JSON.stringify(saved));
 
+  // 🔄 refresh UI
   render();
 };
 
@@ -266,7 +275,8 @@ overlay.addEventListener("touchend",e=>{
     showZoom();
   }
 });
-
+  
+localStorage.removeItem("collection");
 loadCards();
 
 </script>
