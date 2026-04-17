@@ -9,7 +9,7 @@
 
 <style>
 body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
-.header { padding:8px; text-align:center; }
+.header { padding:8px; text-align:center; position:relative; }
 
 #logo {
   width:100%;
@@ -79,13 +79,23 @@ button.card-btn {
 
 .missing { background:#444; }
 
-.reset-btn {
-  margin:10px;
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  background:#e53935;
+/* 🔥 NEW SUBTLE RESET BUTTON */
+.reset-icon {
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#222;
   color:white;
+  border:none;
+  border-radius:50%;
+  width:36px;
+  height:36px;
+  font-size:18px;
+  opacity:0.6;
+}
+
+.reset-icon:hover {
+  opacity:1;
 }
 </style>
 </head>
@@ -98,8 +108,8 @@ button.card-btn {
   <div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 
-  <!-- RESET BUTTON -->
-  <button class="reset-btn" onclick="resetData()">Reset Progress</button>
+  <!-- 🔥 SUBTLE RESET -->
+  <button class="reset-icon" onclick="resetData()">⚙️</button>
 </div>
 
 <div class="tabs">
