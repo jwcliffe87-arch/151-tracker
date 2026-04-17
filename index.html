@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+<link rel="manifest" href="manifest.json">
 <title>151 Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -105,7 +105,9 @@ button.card-btn {
 <div class="grid" id="grid"></div>
 
 <script>
-
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
