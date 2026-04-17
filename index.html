@@ -79,7 +79,6 @@ button.card-btn {
 
 .missing { background:#444; }
 
-/* 🔥 NEW SUBTLE RESET BUTTON */
 .reset-icon {
   position:absolute;
   top:10px;
@@ -94,8 +93,20 @@ button.card-btn {
   opacity:0.6;
 }
 
-.reset-icon:hover {
-  opacity:1;
+.overlay {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.95);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.overlay img {
+  width:95%;
+  max-height:95%;
 }
 </style>
 </head>
@@ -108,7 +119,6 @@ button.card-btn {
   <div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 
-  <!-- 🔥 SUBTLE RESET -->
   <button class="reset-icon" onclick="resetData()">⚙️</button>
 </div>
 
@@ -121,6 +131,11 @@ button.card-btn {
 
 <div class="grid" id="grid"></div>
 
+<!-- OVERLAY -->
+<div id="overlay" class="overlay" onclick="closeOverlay()">
+  <img id="overlayImg">
+</div>
+
 <script>
 
 if ("serviceWorker" in navigator) {
@@ -130,6 +145,7 @@ if ("serviceWorker" in navigator) {
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
+let currentIndex = 0;
 
 const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = {
@@ -139,7 +155,6 @@ const names = {
   extra:"Extras"
 };
 
-// RESET FUNCTION
 function resetData(){
   if(confirm("Reset all progress?")){
     localStorage.removeItem("collection");
@@ -231,6 +246,9 @@ function render(){
 
     const img=document.createElement("img");
     img.src=card.data.images.small;
+
+    img.onclick=()=>openOverlay(index);
+
     div.appendChild(img);
 
     const btn=document.createElement("button");
@@ -264,9 +282,46 @@ function render(){
     (totalOwned/540*100)+"%";
 }
 
+// OVERLAY FUNCTIONS
+function openOverlay(index){
+  currentIndex=index;
+  document.getElementById("overlay").style.display="flex";
+  updateOverlay();
+}
+
+function closeOverlay(){
+  document.getElementById("overlay").style.display="none";
+}
+
+function updateOverlay(){
+  document.getElementById("overlayImg").src =
+    cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
+}
+
+// SWIPE
+let startX=0;
+
+document.getElementById("overlay").addEventListener("touchstart",e=>{
+  startX=e.touches[0].clientX;
+});
+
+document.getElementById("overlay").addEventListener("touchend",e=>{
+  let endX=e.changedTouches[0].clientX;
+
+  if(endX-startX>50){
+    currentIndex=Math.max(0,currentIndex-1);
+    updateOverlay();
+  }
+
+  if(startX-endX>50){
+    currentIndex=Math.min(cards.length-1,currentIndex+1);
+    updateOverlay();
+  }
+});
+
 loadCards();
 
 </script>
 
 </body>
-</html>
+  </html>
