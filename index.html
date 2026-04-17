@@ -19,16 +19,27 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 }
 
 .bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
-.fill { height:100%; width:0%; }
+
+.fill {
+  height:100%;
+  width:0%;
+  transition:width 0.3s ease;
+}
 
 .tabs { display:flex; gap:5px; padding:6px; }
+
 .tabs button {
-  flex:1; padding:8px; border:none; border-radius:6px;
-  background:#333; color:white;
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+  background:#333;
+  color:white;
 }
+
 .tabs button.active { box-shadow:0 0 10px currentColor; }
 
-#tab-normal.active { background:#888; }
+#tab-normal.active { background:#ffffff; color:black; }
 #tab-poke.active { background:#e53935; }
 #tab-master.active { background:#8e24aa; }
 #tab-extra.active { background:#1e88e5; }
@@ -115,7 +126,11 @@ button.card-btn {
 
 <div class="header">
   <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
+
+  <!-- 🔥 TOTAL BACK -->
   <div id="totalText"></div>
+
+  <!-- TAB -->
   <div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
 
@@ -131,7 +146,6 @@ button.card-btn {
 
 <div class="grid" id="grid"></div>
 
-<!-- OVERLAY -->
 <div id="overlay" class="overlay" onclick="closeOverlay()">
   <img id="overlayImg">
 </div>
@@ -215,13 +229,7 @@ function render(){
   grid.innerHTML="";
 
   let count=0;
-
-  let totalOwned = 0;
-  Object.values(saved).forEach(card=>{
-    ["normal","poke","master","extra"].forEach(v=>{
-      if(card[v]) totalOwned++;
-    });
-  });
+  let totalOwned=0;
 
   cards.forEach((card,index)=>{
 
@@ -229,12 +237,16 @@ function render(){
     const displayNum = index+1;
     const isExtra = displayNum>165;
 
-    if(currentView==="extra"&&!isExtra) return;
-    if(currentView!=="extra"&&isExtra) return;
-
     if(!saved[key]){
       saved[key]={normal:false,poke:false,master:false,extra:false};
     }
+
+    ["normal","poke","master","extra"].forEach(v=>{
+      if(saved[key][v]) totalOwned++;
+    });
+
+    if(currentView==="extra"&&!isExtra) return;
+    if(currentView!=="extra"&&isExtra) return;
 
     const owned = saved[key][currentView];
     if(owned) count++;
@@ -246,21 +258,28 @@ function render(){
 
     const img=document.createElement("img");
     img.src=card.data.images.small;
-
     img.onclick=()=>openOverlay(index);
-
     div.appendChild(img);
 
     const btn=document.createElement("button");
     btn.className="card-btn "+(owned?"owned":"missing");
+
+    // 🔥 BLACK TICK FOR NORMAL
     btn.textContent=owned?"✔":"Needed";
 
-    let color="#888";
+    let color="#ffffff";
+    let textColor="white";
+
     if(currentView==="poke") color="#e53935";
     if(currentView==="master") color="#8e24aa";
     if(currentView==="extra") color="#1e88e5";
 
-    if(owned) btn.style.background=color;
+    if(currentView==="normal") textColor="black";
+
+    if(owned){
+      btn.style.background=color;
+      btn.style.color=textColor;
+    }
 
     btn.onclick=()=>{
       saved[key][currentView]=!saved[key][currentView];
@@ -278,11 +297,19 @@ function render(){
   document.getElementById("totalText").innerHTML =
     "TOTAL "+totalOwned+" / 540";
 
-  document.getElementById("fill").style.width =
-    (totalOwned/540*100)+"%";
+  const percent = (count / totals[currentView]) * 100;
+
+  let barColor = "#ffffff";
+  if(currentView==="poke") barColor="#e53935";
+  if(currentView==="master") barColor="#8e24aa";
+  if(currentView==="extra") barColor="#1e88e5";
+
+  const fill = document.getElementById("fill");
+  fill.style.width = percent + "%";
+  fill.style.background = barColor;
 }
 
-// OVERLAY FUNCTIONS
+// overlay unchanged
 function openOverlay(index){
   currentIndex=index;
   document.getElementById("overlay").style.display="flex";
@@ -298,7 +325,6 @@ function updateOverlay(){
     cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
 }
 
-// SWIPE
 let startX=0;
 
 document.getElementById("overlay").addEventListener("touchstart",e=>{
@@ -324,4 +350,4 @@ loadCards();
 </script>
 
 </body>
-  </html>
+</html>
