@@ -134,42 +134,63 @@ async function loadCards(){
       });
     });
 
-    // ADD MISSING CARDS (always)
+    // ADD PROMOS (at end using high numbers)
     cards.push(
-      {
-        id: "snorlax",
-        num: 181,
-        data: {
-          name: "Snorlax",
-          images: { small: "https://i.postimg.cc/9Qr4BCBh/snorlax.png" }
-        }
-      },
-      {
-        id: "mewtwo",
-        num: 183,
-        data: {
-          name: "Mewtwo",
-          images: { small: "https://i.postimg.cc/YCh4xMz1/mewtwo.png" }
-        }
-      },
-      {
-        id: "mewex",
-        num: 205,
-        data: {
-          name: "Mew ex",
-          images: { small: "https://i.postimg.cc/c41trQg1/mew.png" }
-        }
-      }
+      { id:"snorlax", num:9991, data:{name:"Snorlax", images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}},
+      { id:"mewtwo", num:9992, data:{name:"Mewtwo", images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}},
+      { id:"mewex", num:9993, data:{name:"Mew ex", images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}}
     );
 
-    // SAFE SORT
-    cards.sort(function(a,b){
-      return a.num - b.num;
+    // SORT
+    cards.sort((a,b)=>a.num-b.num);
+
+    // FIX 152–165 ORDER
+    const correctOrder = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
+
+    let section = cards.filter(c => c.num >= 152 && c.num <= 165);
+
+    let reordered = [];
+    correctOrder.forEach(n=>{
+      let found = section.find(c => c.num === n);
+      if(found) reordered.push(found);
     });
 
+    let before = cards.filter(c => c.num < 152);
+    let after = cards.filter(c => c.num > 165);
+
+    cards = [...before, ...reordered, ...after];
+// 🔥 FIX EXTRA ORDER (PLACE PROMOS CORRECTLY)
+
+// remove promos from end
+let promos = cards.filter(c =>
+  c.id === "snorlax" || c.id === "mewtwo" || c.id === "mewex"
+);
+
+cards = cards.filter(c =>
+  c.id !== "snorlax" && c.id !== "mewtwo" && c.id !== "mewex"
+);
+
+// split extras
+let main = cards.filter(c => c.num <= 165);
+let extras = cards.filter(c => c.num > 165);
+
+// insert promos into correct positions
+// based on your mapping
+
+// Snorlax at position 181 → index 15 in extras (181-166)
+extras.splice(15, 0, promos.find(p => p.id === "snorlax"));
+
+// Mewtwo at 183 → index 17
+extras.splice(17, 0, promos.find(p => p.id === "mewtwo"));
+
+// Mew ex at 205 → index 39
+extras.splice(39, 0, promos.find(p => p.id === "mewex"));
+
+// rebuild cards
+cards = [...main, ...extras];
     render();
 
-  } catch (e) {
+  } catch(e){
     alert("Error loading cards");
     console.error(e);
   }
@@ -188,8 +209,7 @@ function render(){
   const grid=document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0;
-  let totalOwned=0;
+  let count=0,totalOwned=0;
 
   cards.forEach(card=>{
 
@@ -203,7 +223,6 @@ function render(){
     }
 
     const owned = saved[card.id][currentView];
-
     if(owned) count++;
 
     ["normal","poke","master","extra"].forEach(v=>{
@@ -213,16 +232,22 @@ function render(){
     const div=document.createElement("div");
     div.className="card";
 
-    div.innerHTML=`<div>#${card.num} ${card.data.name}</div>`;
+    // 🔥 FIX DISPLAY NUMBERS
+    let displayNum = card.num;
+    if(card.id==="snorlax") displayNum=181;
+    if(card.id==="mewtwo") displayNum=183;
+    if(card.id==="mewex") displayNum=205;
+
+    div.innerHTML=`<div>#${displayNum} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
-    img.src = card.data.images.small;
+    img.src=card.data.images.small;
 
     div.appendChild(img);
 
     const btn=document.createElement("button");
     btn.className="card-btn "+(owned?"owned":"missing");
-    btn.textContent = owned ? "✔" : "Needed";
+    btn.textContent=owned?"✔":"Needed";
 
     let color="#888";
     if(currentView==="poke") color="#e53935";
@@ -249,13 +274,6 @@ function render(){
 
   document.getElementById("fill").style.width =
     (count/totals[currentView]*100)+"%";
-
-  let color="#888";
-  if(currentView==="poke") color="#e53935";
-  if(currentView==="master") color="#8e24aa";
-  if(currentView==="extra") color="#1e88e5";
-
-  document.getElementById("fill").style.background=color;
 }
 
 loadCards();
