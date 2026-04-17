@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="manifest" href="manifest.json">
+
 <title>151 Tracker</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<link rel="manifest" href="manifest.json">
+
 <style>
 body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
-
 .header { padding:8px; text-align:center; }
 
 #logo {
@@ -21,16 +22,10 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 .fill { height:100%; width:0%; }
 
 .tabs { display:flex; gap:5px; padding:6px; }
-
 .tabs button {
-  flex:1;
-  padding:8px;
-  border:none;
-  border-radius:6px;
-  background:#333;
-  color:white;
+  flex:1; padding:8px; border:none; border-radius:6px;
+  background:#333; color:white;
 }
-
 .tabs button.active { box-shadow:0 0 10px currentColor; }
 
 #tab-normal.active { background:#888; }
@@ -105,9 +100,11 @@ button.card-btn {
 <div class="grid" id="grid"></div>
 
 <script>
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
+
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
@@ -121,89 +118,54 @@ const names = {
 };
 
 async function loadCards(){
-  try {
-    const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
-    const data = await res.json();
+  const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
+  const data = await res.json();
 
-    cards = [];
+  cards = data.data.map(c => ({
+    id: c.id,
+    num: parseInt(c.number) || 0,
+    data: c
+  })).sort((a,b)=>a.num-b.num);
 
-    // ADD API CARDS
-    data.data.forEach(c => {
-      cards.push({
-        id: c.id,
-        num: parseInt(c.number) || 0,
-        data: c
-      });
-    });
+  // FIX 152–165
+  const fix = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
+  let mid = cards.filter(c => c.num >=152 && c.num<=165);
+  let reordered = [];
+  fix.forEach(n=>{
+    let f = mid.find(c=>c.num===n);
+    if(f) reordered.push(f);
+  });
 
-    // ADD PROMOS (at end using high numbers)
-    cards.push(
-      { id:"snorlax", num:9991, data:{name:"Snorlax", images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}},
-      { id:"mewtwo", num:9992, data:{name:"Mewtwo", images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}},
-      { id:"mewex", num:9993, data:{name:"Mew ex", images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}}
-    );
+  cards = [
+    ...cards.filter(c=>c.num<152),
+    ...reordered,
+    ...cards.filter(c=>c.num>165)
+  ];
 
-    // SORT
-    cards.sort((a,b)=>a.num-b.num);
+  // SPLIT
+  let main = cards.filter(c=>c.num<=165);
+  let extras = cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
 
-    // FIX 152–165 ORDER
-    const correctOrder = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
+  // PROMOS
+  extras.splice(15,0,{id:"promo-snorlax",data:{name:"Snorlax",images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}});
+  extras.splice(17,0,{id:"promo-mewtwo",data:{name:"Mewtwo",images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}});
+  extras.splice(39,0,{id:"promo-mewex",data:{name:"Mew ex",images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}});
 
-    let section = cards.filter(c => c.num >= 152 && c.num <= 165);
+  cards = [...main, ...extras];
 
-    let reordered = [];
-    correctOrder.forEach(n=>{
-      let found = section.find(c => c.num === n);
-      if(found) reordered.push(found);
-    });
+  // FIX 196 → 199
+  let ex = cards.slice(165);
+  let moved = ex.splice(30,1)[0];
+  ex.splice(33,0,moved);
+  cards = [...cards.slice(0,165), ...ex];
 
-    let before = cards.filter(c => c.num < 152);
-    let after = cards.filter(c => c.num > 165);
-
-    cards = [...before, ...reordered, ...after];
-// 🔥 FIX EXTRA ORDER (PLACE PROMOS CORRECTLY)
-
-// remove promos from end
-let promos = cards.filter(c =>
-  c.id === "snorlax" || c.id === "mewtwo" || c.id === "mewex"
-);
-
-cards = cards.filter(c =>
-  c.id !== "snorlax" && c.id !== "mewtwo" && c.id !== "mewex"
-);
-
-// split extras
-let main = cards.filter(c => c.num <= 165);
-let extras = cards.filter(c => c.num > 165);
-
-// insert promos into correct positions
-// based on your mapping
-
-// Snorlax at position 181 → index 15 in extras (181-166)
-extras.splice(15, 0, promos.find(p => p.id === "snorlax"));
-
-// Mewtwo at 183 → index 17
-extras.splice(17, 0, promos.find(p => p.id === "mewtwo"));
-
-// Mew ex at 205 → index 39
-extras.splice(39, 0, promos.find(p => p.id === "mewex"));
-
-// rebuild cards
-cards = [...main, ...extras];
-    render();
-
-  } catch(e){
-    alert("Error loading cards");
-    console.error(e);
-  }
+  render();
 }
 
 function setView(view){
   currentView=view;
-
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
   document.getElementById("tab-"+view).classList.add("active");
-
   render();
 }
 
@@ -211,40 +173,39 @@ function render(){
   const grid=document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0,totalOwned=0;
+  let count=0;
 
-  cards.forEach(card=>{
+  // 🔥 GLOBAL TOTAL FIX
+  let totalOwned = 0;
+  Object.values(saved).forEach(card=>{
+    ["normal","poke","master","extra"].forEach(v=>{
+      if(card[v]) totalOwned++;
+    });
+  });
 
-    const isExtra = card.num > 165;
+  cards.forEach((card,index)=>{
 
-    if(currentView==="extra" && !isExtra) return;
-    if(currentView!=="extra" && isExtra) return;
+    const key = "card-"+(index+1);
+    const displayNum = index+1;
+    const isExtra = displayNum>165;
 
-    if(!saved[card.id]){
-      saved[card.id]={normal:false,poke:false,master:false,extra:false};
+    if(currentView==="extra"&&!isExtra) return;
+    if(currentView!=="extra"&&isExtra) return;
+
+    if(!saved[key]){
+      saved[key]={normal:false,poke:false,master:false,extra:false};
     }
 
-    const owned = saved[card.id][currentView];
+    const owned = saved[key][currentView];
     if(owned) count++;
-
-    ["normal","poke","master","extra"].forEach(v=>{
-      if(saved[card.id][v]) totalOwned++;
-    });
 
     const div=document.createElement("div");
     div.className="card";
-
-    // 🔥 FIX DISPLAY NUMBERS
-    let displayNum = card.num;
-    if(card.id==="snorlax") displayNum=181;
-    if(card.id==="mewtwo") displayNum=183;
-    if(card.id==="mewex") displayNum=205;
 
     div.innerHTML=`<div>#${displayNum} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
     img.src=card.data.images.small;
-
     div.appendChild(img);
 
     const btn=document.createElement("button");
@@ -259,7 +220,7 @@ function render(){
     if(owned) btn.style.background=color;
 
     btn.onclick=()=>{
-      saved[card.id][currentView]=!saved[card.id][currentView];
+      saved[key][currentView]=!saved[key][currentView];
       localStorage.setItem("collection",JSON.stringify(saved));
       render();
     };
@@ -275,7 +236,7 @@ function render(){
     "TOTAL "+totalOwned+" / 540";
 
   document.getElementById("fill").style.width =
-    (count/totals[currentView]*100)+"%";
+    (totalOwned/540*100)+"%";
 }
 
 loadCards();
