@@ -44,7 +44,6 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 #tab-master.active { background:#8e24aa; }
 #tab-extra.active { background:#1e88e5; }
 
-/* ⭐ WISHLIST TOGGLE */
 #wishlistToggle {
   width:90%;
   margin:6px auto;
@@ -54,11 +53,6 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
   border-radius:6px;
   background:#444;
   color:white;
-}
-
-#wishlistToggle.active {
-  background:#ffca28;
-  color:black;
 }
 
 .grid {
@@ -81,10 +75,6 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 .card div:first-child {
   height:48px;
   font-size:14px;
-  line-height:1.2;
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
   overflow:hidden;
 }
 
@@ -130,7 +120,6 @@ button.card-btn {
   border-radius:8px;
   background:#333;
   color:white;
-  font-size:14px;
 }
 
 .overlay {
@@ -141,7 +130,6 @@ button.card-btn {
   display:none;
   justify-content:center;
   align-items:center;
-  z-index:999;
 }
 
 .overlay img {
@@ -155,12 +143,9 @@ button.card-btn {
 
 <div class="header">
   <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
-
   <div id="totalText"></div>
   <div id="progress"></div>
-
   <div class="bar"><div class="fill" id="fill"></div></div>
-
   <button class="reset-icon" onclick="resetData()">⚙️</button>
 </div>
 
@@ -171,7 +156,6 @@ button.card-btn {
   <button id="tab-extra" onclick="setView('extra')">Extras</button>
 </div>
 
-<!-- ⭐ WISHLIST BUTTON -->
 <button id="wishlistToggle" onclick="toggleWishlist()">Show Wishlist</button>
 
 <div class="grid" id="grid"></div>
@@ -184,10 +168,6 @@ button.card-btn {
 
 <script>
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
-
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
@@ -195,12 +175,7 @@ let currentIndex = 0;
 let showWishlist = false;
 
 const totals = { normal:165, poke:165, master:165, extra:45 };
-const names = {
-  normal:"Normal",
-  poke:"Pokéball",
-  master:"Masterball",
-  extra:"Extras"
-};
+const names = { normal:"Normal", poke:"Pokéball", master:"Masterball", extra:"Extras" };
 
 function resetData(){
   if(confirm("Reset all progress?")){
@@ -215,9 +190,6 @@ function scrollToTop(){
 
 function toggleWishlist(){
   showWishlist = !showWishlist;
-  const btn = document.getElementById("wishlistToggle");
-  btn.classList.toggle("active");
-  btn.textContent = showWishlist ? "Showing Wishlist" : "Show Wishlist";
   render();
 }
 
@@ -226,38 +198,10 @@ async function loadCards(){
   const data = await res.json();
 
   cards = data.data.map(c => ({
-    id: c.id,
-    num: parseInt(c.number) || 0,
-    data: c
+    id:c.id,
+    num:parseInt(c.number)||0,
+    data:c
   })).sort((a,b)=>a.num-b.num);
-
-  const fix = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
-  let mid = cards.filter(c => c.num >=152 && c.num<=165);
-  let reordered = [];
-  fix.forEach(n=>{
-    let f = mid.find(c=>c.num===n);
-    if(f) reordered.push(f);
-  });
-
-  cards = [
-    ...cards.filter(c=>c.num<152),
-    ...reordered,
-    ...cards.filter(c=>c.num>165)
-  ];
-
-  let main = cards.filter(c=>c.num<=165);
-  let extras = cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
-
-  extras.splice(15,0,{id:"promo-snorlax",data:{name:"Snorlax",images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}});
-  extras.splice(17,0,{id:"promo-mewtwo",data:{name:"Mewtwo",images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}});
-  extras.splice(39,0,{id:"promo-mewex",data:{name:"Mew ex",images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}});
-
-  cards = [...main, ...extras];
-
-  let ex = cards.slice(165);
-  let moved = ex.splice(30,1)[0];
-  ex.splice(33,0,moved);
-  cards = [...cards.slice(0,165), ...ex];
 
   render();
 }
@@ -275,12 +219,11 @@ function render(){
 
   let count=0;
   let totalOwned=0;
+  let wishlistCount=0;
 
   cards.forEach((card,index)=>{
 
-    const key = "card-"+(index+1);
-    const displayNum = index+1;
-    const isExtra = displayNum>165;
+    const key="card-"+(index+1);
 
     if(!saved[key]){
       saved[key]={normal:false,poke:false,master:false,extra:false};
@@ -290,12 +233,17 @@ function render(){
       if(saved[key][v]) totalOwned++;
     });
 
-    if(currentView==="extra"&&!isExtra) return;
-    if(currentView!=="extra"&&isExtra) return;
+    const owned=saved[key][currentView];
+    
+    const displayNum = index + 1;
+const isExtra = displayNum > 165;
 
-    const owned = saved[key][currentView];
+// 🔥 FIX TAB FILTERING
+if(currentView==="extra" && !isExtra) return;
+if(currentView!=="extra" && isExtra) return;
 
-    // ⭐ wishlist filter
+    if(!owned) wishlistCount++;
+
     if(showWishlist && owned) return;
 
     if(owned) count++;
@@ -303,7 +251,7 @@ function render(){
     const div=document.createElement("div");
     div.className="card";
 
-    div.innerHTML=`<div>#${displayNum} ${card.data.name}</div>`;
+    div.innerHTML=`<div>#${index+1} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
     img.src=card.data.images.small;
@@ -315,13 +263,11 @@ function render(){
     btn.textContent=owned?"✔":"Needed";
 
     let color="#ffffff";
-    let textColor="white";
+    let textColor="black";
 
-    if(currentView==="poke") color="#e53935";
-    if(currentView==="master") color="#8e24aa";
-    if(currentView==="extra") color="#1e88e5";
-
-    if(currentView==="normal") textColor="black";
+    if(currentView==="poke"){color="#e53935";textColor="white";}
+    if(currentView==="master"){color="#8e24aa";textColor="white";}
+    if(currentView==="extra"){color="#1e88e5";textColor="white";}
 
     if(owned){
       btn.style.background=color;
@@ -338,29 +284,39 @@ function render(){
     grid.appendChild(div);
   });
 
-  const neededTab = totals[currentView] - count;
-  const neededTotal = 540 - totalOwned;
-
+  // 🔢 TEXT
   document.getElementById("progress").innerHTML =
-    names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
+    names[currentView]+" "+count+" / "+totals[currentView];
 
   document.getElementById("totalText").innerHTML =
-    "TOTAL "+totalOwned+" / 540 ("+neededTotal+" needed)";
+    "TOTAL "+totalOwned+" / 540";
 
-  const percent = (count / totals[currentView]) * 100;
+  // 🎨 BAR
+  const fill=document.getElementById("fill");
+  fill.style.width=(count/totals[currentView]*100)+"%";
 
-  let barColor = "#ffffff";
+  let barColor="#ffffff";
   if(currentView==="poke") barColor="#e53935";
   if(currentView==="master") barColor="#8e24aa";
   if(currentView==="extra") barColor="#1e88e5";
+  fill.style.background=barColor;
 
-  const fill = document.getElementById("fill");
-  fill.style.width = percent + "%";
-  fill.style.background = barColor;
+  // ⭐ WISHLIST BUTTON
+  const wishBtn=document.getElementById("wishlistToggle");
+
+  let btnColor=barColor;
+  let btnTextColor=(currentView==="normal")?"black":"white";
+
+  wishBtn.textContent= showWishlist
+    ? `Showing Wishlist (${wishlistCount})`
+    : `Show Wishlist (${wishlistCount})`;
+
+  wishBtn.style.background= showWishlist ? btnColor : "#444";
+  wishBtn.style.color= showWishlist ? btnTextColor : "white";
 }
 
-function openOverlay(index){
-  currentIndex=index;
+function openOverlay(i){
+  currentIndex=i;
   document.getElementById("overlay").style.display="flex";
   updateOverlay();
 }
@@ -370,29 +326,9 @@ function closeOverlay(){
 }
 
 function updateOverlay(){
-  document.getElementById("overlayImg").src =
+  document.getElementById("overlayImg").src=
     cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
 }
-
-let startX=0;
-
-document.getElementById("overlay").addEventListener("touchstart",e=>{
-  startX=e.touches[0].clientX;
-});
-
-document.getElementById("overlay").addEventListener("touchend",e=>{
-  let endX=e.changedTouches[0].clientX;
-
-  if(endX-startX>50){
-    currentIndex=Math.max(0,currentIndex-1);
-    updateOverlay();
-  }
-
-  if(startX-endX>50){
-    currentIndex=Math.min(cards.length-1,currentIndex+1);
-    updateOverlay();
-  }
-});
 
 loadCards();
 
