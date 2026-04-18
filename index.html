@@ -19,12 +19,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 }
 
 .bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
-
-.fill {
-  height:100%;
-  width:0%;
-  transition:width 0.3s ease;
-}
+.fill { height:100%; width:0%; transition:width 0.3s ease; }
 
 .tabs { display:flex; gap:5px; padding:6px; }
 
@@ -45,9 +40,8 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 #tab-extra.active { background:#1e88e5; }
 
 #wishlistToggle {
-  width:90%;
+  width:100%;
   margin:6px auto;
-  display:block;
   padding:8px;
   border:none;
   border-radius:6px;
@@ -92,10 +86,7 @@ button.card-btn {
   padding:6px;
   border:none;
   border-radius:6px;
-  color:white;
 }
-
-.missing { background:#444; }
 
 .reset-icon {
   position:absolute;
@@ -103,38 +94,19 @@ button.card-btn {
   right:10px;
   background:#222;
   color:white;
-  border:none;
   border-radius:50%;
   width:36px;
   height:36px;
-  font-size:18px;
-  opacity:0.6;
 }
 
 #backTop {
-  width:90%;
+  width:100%;
   margin:20px auto;
-  display:block;
   padding:10px;
   border:none;
   border-radius:8px;
   background:#333;
   color:white;
-}
-
-.overlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.95);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.overlay img {
-  width:95%;
-  max-height:95%;
 }
 </style>
 </head>
@@ -162,26 +134,19 @@ button.card-btn {
 
 <button id="backTop" onclick="scrollToTop()">↑ Back to Top</button>
 
-<div id="overlay" class="overlay" onclick="closeOverlay()">
-  <img id="overlayImg">
-</div>
-
 <script>
 
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
-let currentIndex = 0;
 let showWishlist = false;
 
 const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = { normal:"Normal", poke:"Pokéball", master:"Masterball", extra:"Extras" };
 
 function resetData(){
-  if(confirm("Reset all progress?")){
-    localStorage.removeItem("collection");
-    location.reload();
-  }
+  localStorage.removeItem("collection");
+  location.reload();
 }
 
 function scrollToTop(){
@@ -197,19 +162,52 @@ async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
 
+  // base sort
   cards = data.data.map(c => ({
-    id:c.id,
-    num:parseInt(c.number)||0,
-    data:c
+    id: c.id,
+    num: parseInt(c.number) || 0,
+    data: c
   })).sort((a,b)=>a.num-b.num);
+
+  // fix 152–165
+  const fix = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
+  let mid = cards.filter(c => c.num >=152 && c.num<=165);
+  let reordered = [];
+  fix.forEach(n=>{
+    let f = mid.find(c=>c.num===n);
+    if(f) reordered.push(f);
+  });
+
+  cards = [
+    ...cards.filter(c=>c.num<152),
+    ...reordered,
+    ...cards.filter(c=>c.num>165)
+  ];
+
+  // split extras
+  let main = cards.filter(c=>c.num<=165);
+  let extras = cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
+
+  // promos
+  extras.splice(15,0,{id:"promo-snorlax",data:{name:"Snorlax",images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}});
+  extras.splice(17,0,{id:"promo-mewtwo",data:{name:"Mewtwo",images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}});
+  extras.splice(39,0,{id:"promo-mewex",data:{name:"Mew ex",images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}});
+
+  cards = [...main, ...extras];
+
+  // final fix
+  let ex = cards.slice(165);
+  let moved = ex.splice(30,1)[0];
+  ex.splice(33,0,moved);
+  cards = [...cards.slice(0,165), ...ex];
 
   render();
 }
 
-function setView(view){
-  currentView=view;
+function setView(v){
+  currentView=v;
   document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
-  document.getElementById("tab-"+view).classList.add("active");
+  document.getElementById("tab-"+v).classList.add("active");
   render();
 }
 
@@ -233,33 +231,29 @@ function render(){
       if(saved[key][v]) totalOwned++;
     });
 
-    const owned=saved[key][currentView];
-    
-    const displayNum = index + 1;
-const isExtra = displayNum > 165;
+    const displayNum = index+1;
+    const isExtra = displayNum>165;
 
-// 🔥 FIX TAB FILTERING
-if(currentView==="extra" && !isExtra) return;
-if(currentView!=="extra" && isExtra) return;
+    if(currentView==="extra" && !isExtra) return;
+    if(currentView!=="extra" && isExtra) return;
+
+    const owned = saved[key][currentView];
 
     if(!owned) wishlistCount++;
-
     if(showWishlist && owned) return;
-
     if(owned) count++;
 
     const div=document.createElement("div");
     div.className="card";
 
-    div.innerHTML=`<div>#${index+1} ${card.data.name}</div>`;
+    div.innerHTML=`<div>#${displayNum} ${card.data.name}</div>`;
 
     const img=document.createElement("img");
     img.src=card.data.images.small;
-    img.onclick=()=>openOverlay(index);
     div.appendChild(img);
 
     const btn=document.createElement("button");
-    btn.className="card-btn "+(owned?"owned":"missing");
+    btn.className="card-btn";
     btn.textContent=owned?"✔":"Needed";
 
     let color="#ffffff";
@@ -272,6 +266,9 @@ if(currentView!=="extra" && isExtra) return;
     if(owned){
       btn.style.background=color;
       btn.style.color=textColor;
+    } else {
+      btn.style.background="#444";
+      btn.style.color="white";
     }
 
     btn.onclick=()=>{
@@ -284,14 +281,15 @@ if(currentView!=="extra" && isExtra) return;
     grid.appendChild(div);
   });
 
-  // 🔢 TEXT
+  const neededTab = totals[currentView] - count;
+  const neededTotal = 540 - totalOwned;
+
   document.getElementById("progress").innerHTML =
-    names[currentView]+" "+count+" / "+totals[currentView];
+    names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
 
   document.getElementById("totalText").innerHTML =
-    "TOTAL "+totalOwned+" / 540";
+    "Total "+totalOwned+" / 540 ("+neededTotal+" needed)";
 
-  // 🎨 BAR
   const fill=document.getElementById("fill");
   fill.style.width=(count/totals[currentView]*100)+"%";
 
@@ -299,35 +297,18 @@ if(currentView!=="extra" && isExtra) return;
   if(currentView==="poke") barColor="#e53935";
   if(currentView==="master") barColor="#8e24aa";
   if(currentView==="extra") barColor="#1e88e5";
+
   fill.style.background=barColor;
 
-  // ⭐ WISHLIST BUTTON
   const wishBtn=document.getElementById("wishlistToggle");
+  let textColor=(currentView==="normal")?"black":"white";
 
-  let btnColor=barColor;
-  let btnTextColor=(currentView==="normal")?"black":"white";
-
-  wishBtn.textContent= showWishlist
+  wishBtn.textContent = showWishlist
     ? `Showing Wishlist (${wishlistCount})`
     : `Show Wishlist (${wishlistCount})`;
 
-  wishBtn.style.background= showWishlist ? btnColor : "#444";
-  wishBtn.style.color= showWishlist ? btnTextColor : "white";
-}
-
-function openOverlay(i){
-  currentIndex=i;
-  document.getElementById("overlay").style.display="flex";
-  updateOverlay();
-}
-
-function closeOverlay(){
-  document.getElementById("overlay").style.display="none";
-}
-
-function updateOverlay(){
-  document.getElementById("overlayImg").src=
-    cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
+  wishBtn.style.background = showWishlist ? barColor : "#444";
+  wishBtn.style.color = showWishlist ? textColor : "white";
 }
 
 loadCards();
