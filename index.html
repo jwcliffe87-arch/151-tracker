@@ -118,7 +118,7 @@ button.card-btn {
   opacity:0.8;
 }
 
-/* 🔥 CUSTOM MODAL */
+/* RESET MODAL */
 #resetModal {
   display:none;
   position:fixed;
@@ -154,6 +154,23 @@ button.card-btn {
 .cancel { background:#444; color:white; }
 .confirm { background:#e53935; color:white; }
 
+/* 🔥 OVERLAY */
+#overlay {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.95);
+  justify-content:center;
+  align-items:center;
+  z-index:2000;
+}
+
+#overlay img {
+  width:95%;
+  max-height:95%;
+}
+
 </style>
 </head>
 
@@ -183,7 +200,7 @@ button.card-btn {
 
 <button id="backTop" onclick="scrollToTop()">↑</button>
 
-<!-- 🔥 RESET MODAL -->
+<!-- RESET MODAL -->
 <div id="resetModal">
   <div class="box">
     <div style="font-size:18px;margin-bottom:10px;">⚙️ Reset Progress</div>
@@ -198,37 +215,54 @@ button.card-btn {
   </div>
 </div>
 
+<!-- 🔥 OVERLAY -->
+<div id="overlay">
+  <img id="overlayImg">
+</div>
+
 <script>
 
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
 let showWishlist = false;
+let currentIndex = 0;
 
 const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = { normal:"Normal", poke:"Pokéball", master:"Masterball", extra:"Extras" };
 
-function openResetModal(){
-  document.getElementById("resetModal").style.display = "flex";
+function openResetModal(){ document.getElementById("resetModal").style.display="flex"; }
+function closeResetModal(){ document.getElementById("resetModal").style.display="none"; }
+function confirmReset(){ localStorage.removeItem("collection"); location.reload(); }
+function scrollToTop(){ window.scrollTo({top:0,behavior:"smooth"}); }
+
+function toggleWishlist(){ showWishlist=!showWishlist; render(); }
+
+function openOverlay(index){
+  currentIndex=index;
+  document.getElementById("overlay").style.display="flex";
+  updateOverlay();
 }
 
-function closeResetModal(){
-  document.getElementById("resetModal").style.display = "none";
+function updateOverlay(){
+  document.getElementById("overlayImg").src =
+    cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
 }
 
-function confirmReset(){
-  localStorage.removeItem("collection");
-  location.reload();
-}
+document.getElementById("overlay").onclick=()=> {
+  document.getElementById("overlay").style.display="none";
+};
 
-function scrollToTop(){
-  window.scrollTo({ top:0, behavior:"smooth" });
-}
-
-function toggleWishlist(){
-  showWishlist = !showWishlist;
-  render();
-}
+let startX=0;
+document.getElementById("overlay").addEventListener("touchstart",e=>{
+  startX=e.touches[0].clientX;
+});
+document.getElementById("overlay").addEventListener("touchend",e=>{
+  let endX=e.changedTouches[0].clientX;
+  if(endX-startX>50) currentIndex=Math.max(0,currentIndex-1);
+  if(startX-endX>50) currentIndex=Math.min(cards.length-1,currentIndex+1);
+  updateOverlay();
+});
 
 async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
@@ -240,34 +274,29 @@ async function loadCards(){
     data: c
   })).sort((a,b)=>a.num-b.num);
 
-  // 🔥 ORDER FIXES + PROMOS
-  const fix = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
-  let mid = cards.filter(c => c.num >=152 && c.num<=165);
-  let reordered = [];
+  const fix=[162,159,152,154,153,163,164,155,165,158,160,161,156,157];
+  let mid=cards.filter(c=>c.num>=152&&c.num<=165);
+  let reordered=[];
   fix.forEach(n=>{
-    let f = mid.find(c=>c.num===n);
+    let f=mid.find(c=>c.num===n);
     if(f) reordered.push(f);
   });
 
-  cards = [
-    ...cards.filter(c=>c.num<152),
-    ...reordered,
-    ...cards.filter(c=>c.num>165)
-  ];
+  cards=[...cards.filter(c=>c.num<152),...reordered,...cards.filter(c=>c.num>165)];
 
-  let main = cards.filter(c=>c.num<=165);
-  let extras = cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
+  let main=cards.filter(c=>c.num<=165);
+  let extras=cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
 
   extras.splice(15,0,{id:"promo-snorlax",data:{name:"Snorlax",images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}});
   extras.splice(17,0,{id:"promo-mewtwo",data:{name:"Mewtwo",images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}});
   extras.splice(39,0,{id:"promo-mewex",data:{name:"Mew ex",images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}});
 
-  cards = [...main, ...extras];
+  cards=[...main,...extras];
 
-  let ex = cards.slice(165);
-  let moved = ex.splice(30,1)[0];
+  let ex=cards.slice(165);
+  let moved=ex.splice(30,1)[0];
   ex.splice(33,0,moved);
-  cards = [...cards.slice(0,165), ...ex];
+  cards=[...cards.slice(0,165),...ex];
 
   render();
 }
@@ -283,32 +312,25 @@ function render(){
   const grid=document.getElementById("grid");
   grid.innerHTML="";
 
-  let count=0;
-  let totalOwned=0;
-  let wishlistCount=0;
+  let count=0,totalOwned=0,wishlistCount=0;
 
   cards.forEach((card,index)=>{
 
     const key="card-"+(index+1);
+    if(!saved[key]) saved[key]={normal:false,poke:false,master:false,extra:false};
 
-    if(!saved[key]){
-      saved[key]={normal:false,poke:false,master:false,extra:false};
-    }
+    ["normal","poke","master","extra"].forEach(v=>{ if(saved[key][v]) totalOwned++; });
 
-    ["normal","poke","master","extra"].forEach(v=>{
-      if(saved[key][v]) totalOwned++;
-    });
+    const displayNum=index+1;
+    const isExtra=displayNum>165;
 
-    const displayNum = index+1;
-    const isExtra = displayNum>165;
+    if(currentView==="extra"&&!isExtra) return;
+    if(currentView!=="extra"&&isExtra) return;
 
-    if(currentView==="extra" && !isExtra) return;
-    if(currentView!=="extra" && isExtra) return;
-
-    const owned = saved[key][currentView];
+    const owned=saved[key][currentView];
 
     if(!owned) wishlistCount++;
-    if(showWishlist && owned) return;
+    if(showWishlist&&owned) return;
     if(owned) count++;
 
     const div=document.createElement("div");
@@ -318,26 +340,20 @@ function render(){
 
     const img=document.createElement("img");
     img.src=card.data.images.small;
+    img.onclick=()=>openOverlay(index);
     div.appendChild(img);
 
     const btn=document.createElement("button");
     btn.className="card-btn";
     btn.textContent=owned?"✔":"Needed";
 
-    let color="#ffffff";
-    let textColor="black";
-
+    let color="#fff",textColor="black";
     if(currentView==="poke"){color="#e53935";textColor="white";}
     if(currentView==="master"){color="#8e24aa";textColor="white";}
     if(currentView==="extra"){color="#1e88e5";textColor="white";}
 
-    if(owned){
-      btn.style.background=color;
-      btn.style.color=textColor;
-    } else {
-      btn.style.background="#444";
-      btn.style.color="white";
-    }
+    btn.style.background=owned?color:"#444";
+    btn.style.color=owned?textColor:"white";
 
     btn.onclick=()=>{
       saved[key][currentView]=!saved[key][currentView];
@@ -349,8 +365,8 @@ function render(){
     grid.appendChild(div);
   });
 
-  const neededTab = totals[currentView] - count;
-  const neededTotal = 540 - totalOwned;
+  const neededTab=totals[currentView]-count;
+  const neededTotal=540-totalOwned;
 
   document.getElementById("progress").innerHTML =
     names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
@@ -361,11 +377,10 @@ function render(){
   const fill=document.getElementById("fill");
   fill.style.width=(count/totals[currentView]*100)+"%";
 
-  let barColor="#ffffff";
+  let barColor="#fff";
   if(currentView==="poke") barColor="#e53935";
   if(currentView==="master") barColor="#8e24aa";
   if(currentView==="extra") barColor="#1e88e5";
-
   fill.style.background=barColor;
 
   const wishBtn=document.getElementById("wishlistToggle");
