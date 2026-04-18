@@ -44,6 +44,23 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 #tab-master.active { background:#8e24aa; }
 #tab-extra.active { background:#1e88e5; }
 
+/* ⭐ WISHLIST TOGGLE */
+#wishlistToggle {
+  width:90%;
+  margin:6px auto;
+  display:block;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+  background:#444;
+  color:white;
+}
+
+#wishlistToggle.active {
+  background:#ffca28;
+  color:black;
+}
+
 .grid {
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -104,7 +121,6 @@ button.card-btn {
   opacity:0.6;
 }
 
-/* 🔥 BACK TO TOP BUTTON */
 #backTop {
   width:90%;
   margin:20px auto;
@@ -155,9 +171,11 @@ button.card-btn {
   <button id="tab-extra" onclick="setView('extra')">Extras</button>
 </div>
 
+<!-- ⭐ WISHLIST BUTTON -->
+<button id="wishlistToggle" onclick="toggleWishlist()">Show Wishlist</button>
+
 <div class="grid" id="grid"></div>
 
-<!-- 🔥 BACK TO TOP -->
 <button id="backTop" onclick="scrollToTop()">↑ Back to Top</button>
 
 <div id="overlay" class="overlay" onclick="closeOverlay()">
@@ -174,6 +192,7 @@ let saved = JSON.parse(localStorage.getItem("collection")) || {};
 let cards = [];
 let currentView = "normal";
 let currentIndex = 0;
+let showWishlist = false;
 
 const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = {
@@ -190,12 +209,16 @@ function resetData(){
   }
 }
 
-// 🔥 SCROLL TO TOP
 function scrollToTop(){
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function toggleWishlist(){
+  showWishlist = !showWishlist;
+  const btn = document.getElementById("wishlistToggle");
+  btn.classList.toggle("active");
+  btn.textContent = showWishlist ? "Showing Wishlist" : "Show Wishlist";
+  render();
 }
 
 async function loadCards(){
@@ -271,6 +294,10 @@ function render(){
     if(currentView!=="extra"&&isExtra) return;
 
     const owned = saved[key][currentView];
+
+    // ⭐ wishlist filter
+    if(showWishlist && owned) return;
+
     if(owned) count++;
 
     const div=document.createElement("div");
@@ -311,11 +338,14 @@ function render(){
     grid.appendChild(div);
   });
 
+  const neededTab = totals[currentView] - count;
+  const neededTotal = 540 - totalOwned;
+
   document.getElementById("progress").innerHTML =
-    names[currentView]+" "+count+" / "+totals[currentView];
+    names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
 
   document.getElementById("totalText").innerHTML =
-    "TOTAL "+totalOwned+" / 540";
+    "TOTAL "+totalOwned+" / 540 ("+neededTotal+" needed)";
 
   const percent = (count / totals[currentView]) * 100;
 
