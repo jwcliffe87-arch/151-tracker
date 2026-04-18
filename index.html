@@ -40,7 +40,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 #tab-extra.active { background:#1e88e5; }
 
 #wishlistToggle {
-  width:90%;
+  width:100%;
   margin:6px auto;
   padding:8px;
   border:none;
@@ -101,7 +101,7 @@ button.card-btn {
 }
 
 #backTop {
-  width:90%;
+  width:100%;
   margin:20px auto;
   padding:10px;
   border:none;
@@ -348,7 +348,7 @@ function render(){
     names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
 
   document.getElementById("totalText").innerHTML =
-    "TOTAL "+totalOwned+" / 540 ("+neededTotal+" needed)";
+    "Total "+totalOwned+" / 540 ("+neededTotal+" needed)";
 
   const fill=document.getElementById("fill");
   fill.style.width=(count/totals[currentView]*100)+"%";
