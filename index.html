@@ -118,7 +118,7 @@ button.card-btn {
   <div id="totalText"></div>
   <div id="progress"></div>
   <div class="bar"><div class="fill" id="fill"></div></div>
-  <button class="reset-icon" onclick="resetData()">⚙️</button>
+  <button class="reset-icon" onclick="handleReset(event)">⚙️</button>
 </div>
 
 <div class="tabs">
@@ -144,7 +144,12 @@ let showWishlist = false;
 const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = { normal:"Normal", poke:"Pokéball", master:"Masterball", extra:"Extras" };
 
-function resetData(){
+function handleReset(e){
+  e.preventDefault();
+
+  const confirmReset = confirm("Reset all progress?");
+  if(!confirmReset) return;
+
   localStorage.removeItem("collection");
   location.reload();
 }
