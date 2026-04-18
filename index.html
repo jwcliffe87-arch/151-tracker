@@ -40,7 +40,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 #tab-extra.active { background:#1e88e5; }
 
 #wishlistToggle {
-  width:100%;
+  width:90%;
   margin:6px auto;
   padding:8px;
   border:none;
@@ -97,10 +97,11 @@ button.card-btn {
   border-radius:50%;
   width:36px;
   height:36px;
+  font-size:18px;
 }
 
 #backTop {
-  width:100%;
+  width:90%;
   margin:20px auto;
   padding:10px;
   border:none;
@@ -108,6 +109,43 @@ button.card-btn {
   background:#333;
   color:white;
 }
+
+/* 🔥 CUSTOM MODAL */
+#resetModal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.8);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+}
+
+#resetModal .box {
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:12px;
+  width:80%;
+  max-width:300px;
+  text-align:center;
+}
+
+#resetModal .actions {
+  display:flex;
+  gap:10px;
+}
+
+#resetModal button {
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+}
+
+.cancel { background:#444; color:white; }
+.confirm { background:#e53935; color:white; }
+
 </style>
 </head>
 
@@ -115,10 +153,13 @@ button.card-btn {
 
 <div class="header">
   <img src="https://i.postimg.cc/Kjhsytbk/logo.png" id="logo">
+
   <div id="totalText"></div>
   <div id="progress"></div>
+
   <div class="bar"><div class="fill" id="fill"></div></div>
-  <button class="reset-icon" onclick="handleReset(event)">⚙️</button>
+
+  <button class="reset-icon" onclick="openResetModal()">⚙️</button>
 </div>
 
 <div class="tabs">
@@ -134,6 +175,21 @@ button.card-btn {
 
 <button id="backTop" onclick="scrollToTop()">↑ Back to Top</button>
 
+<!-- 🔥 RESET MODAL -->
+<div id="resetModal">
+  <div class="box">
+    <div style="font-size:18px;margin-bottom:10px;">⚙️ Reset Progress</div>
+    <div style="font-size:14px;color:#ccc;margin-bottom:20px;">
+      This will clear your entire collection.<br><br>
+      This cannot be undone.
+    </div>
+    <div class="actions">
+      <button class="cancel" onclick="closeResetModal()">Cancel</button>
+      <button class="confirm" onclick="confirmReset()">Reset</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 let saved = JSON.parse(localStorage.getItem("collection")) || {};
@@ -144,12 +200,15 @@ let showWishlist = false;
 const totals = { normal:165, poke:165, master:165, extra:45 };
 const names = { normal:"Normal", poke:"Pokéball", master:"Masterball", extra:"Extras" };
 
-function handleReset(e){
-  e.preventDefault();
+function openResetModal(){
+  document.getElementById("resetModal").style.display = "flex";
+}
 
-  const confirmReset = confirm("Reset all progress?");
-  if(!confirmReset) return;
+function closeResetModal(){
+  document.getElementById("resetModal").style.display = "none";
+}
 
+function confirmReset(){
   localStorage.removeItem("collection");
   location.reload();
 }
@@ -167,14 +226,13 @@ async function loadCards(){
   const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
   const data = await res.json();
 
-  // base sort
   cards = data.data.map(c => ({
     id: c.id,
     num: parseInt(c.number) || 0,
     data: c
   })).sort((a,b)=>a.num-b.num);
 
-  // fix 152–165
+  // 🔥 ORDER FIXES + PROMOS
   const fix = [162,159,152,154,153,163,164,155,165,158,160,161,156,157];
   let mid = cards.filter(c => c.num >=152 && c.num<=165);
   let reordered = [];
@@ -189,18 +247,15 @@ async function loadCards(){
     ...cards.filter(c=>c.num>165)
   ];
 
-  // split extras
   let main = cards.filter(c=>c.num<=165);
   let extras = cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
 
-  // promos
   extras.splice(15,0,{id:"promo-snorlax",data:{name:"Snorlax",images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}});
   extras.splice(17,0,{id:"promo-mewtwo",data:{name:"Mewtwo",images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}});
   extras.splice(39,0,{id:"promo-mewex",data:{name:"Mew ex",images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}});
 
   cards = [...main, ...extras];
 
-  // final fix
   let ex = cards.slice(165);
   let moved = ex.splice(30,1)[0];
   ex.splice(33,0,moved);
@@ -293,7 +348,7 @@ function render(){
     names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
 
   document.getElementById("totalText").innerHTML =
-    "Total "+totalOwned+" / 540 ("+neededTotal+" needed)";
+    "TOTAL "+totalOwned+" / 540 ("+neededTotal+" needed)";
 
   const fill=document.getElementById("fill");
   fill.style.width=(count/totals[currentView]*100)+"%";
