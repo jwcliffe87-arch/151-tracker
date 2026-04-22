@@ -1,22 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
 
-<title>151 Tracker</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link rel="manifest" href="manifest.json">
-
-<style>
-body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
-.header { padding:8px; text-align:center; position:relative; }
-
-#logo {
-  width:100%;
-  max-width:300px;
-  margin:0 auto 10px auto;
-  display:block;
-}
 
 .bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
 .fill { height:100%; width:0%; transition:width 0.3s ease; }
@@ -413,6 +395,459 @@ function render(){
 
   wishBtn.style.background = showWishlist ? barColor : "#444";
   wishBtn.style.color = showWishlist ? textColor : "white";
+}
+
+loadCards();
+
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>151 Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
+.header { padding:8px; text-align:center; position:relative; }
+
+#logo {
+  width:100%;
+  max-width:300px;
+  margin:0 auto 10px auto;
+  display:block;
+}
+
+.bar { height:10px; background:#333; border-radius:6px; overflow:hidden; }
+.fill { height:100%; width:0%; transition:width 0.3s ease; }
+
+.tabs { display:flex; gap:5px; padding:6px; }
+
+.tabs button {
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+  background:#333;
+  color:white;
+}
+
+.tabs button.active { box-shadow:0 0 10px currentColor; }
+
+#tab-normal.active { background:#ffffff; color:black; }
+#tab-poke.active { background:#e53935; }
+#tab-master.active { background:#8e24aa; }
+#tab-extra.active { background:#1e88e5; }
+
+#wishlistToggle {
+  width:100%;
+  margin:6px auto;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+  background:#444;
+  color:white;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  padding:6px;
+  padding-bottom:60px;
+}
+
+.card {
+  background:#1a1a1a;
+  border-radius:10px;
+  padding:6px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.card div:first-child {
+  height:48px;
+  font-size:14px;
+  overflow:hidden;
+}
+
+.card img {
+  width:100%;
+  height:140px;
+  object-fit:contain;
+  background:black;
+  border-radius:6px;
+}
+
+button.card-btn {
+  margin-top:4px;
+  width:100%;
+  padding:6px;
+  border:none;
+  border-radius:6px;
+}
+
+.reset-icon {
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:#222;
+  color:white;
+  border-radius:50%;
+  width:36px;
+  height:36px;
+  font-size:18px;
+}
+
+#backTop {
+  position:fixed;
+  bottom:70px;
+  right:20px;
+  width:50px;
+  height:50px;
+  border:none;
+  border-radius:50%;
+  background:#333;
+  color:white;
+  font-size:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  opacity:0.8;
+}
+
+/* STATS BAR */
+#statsBar {
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#111;
+  color:#ccc;
+  font-size:13px;
+  text-align:center;
+  padding:8px 0;
+  z-index:998;
+  border-top:2px solid #333;
+}
+
+/* RESET MODAL */
+#resetModal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.8);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+}
+
+#resetModal .box {
+  background:#1a1a1a;
+  padding:20px;
+  border-radius:12px;
+  width:80%;
+  max-width:300px;
+  text-align:center;
+}
+
+#resetModal .actions {
+  display:flex;
+  gap:10px;
+}
+
+#resetModal button {
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+}
+
+.cancel { background:#444; color:white; }
+.confirm { background:#e53935; color:white; }
+
+/* OVERLAY */
+#overlay {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.95);
+  justify-content:center;
+  align-items:center;
+  z-index:2000;
+}
+
+#overlay img {
+  width:95%;
+  max-height:95%;
+}
+
+#downloadBtn {
+  position:absolute;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  background:#333;
+  color:white;
+  font-size:14px;
+  z-index:2001;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="logo.png" id="logo">
+  <div id="totalText"></div>
+  <div id="progress"></div>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <button class="reset-icon" onclick="openResetModal()">⚙️</button>
+</div>
+
+<div class="tabs">
+  <button id="tab-normal" onclick="setView('normal')">Normal</button>
+  <button id="tab-poke" onclick="setView('poke')">Pokéball</button>
+  <button id="tab-master" onclick="setView('master')">Masterball</button>
+  <button id="tab-extra" onclick="setView('extra')">Extras</button>
+</div>
+
+<button id="wishlistToggle" onclick="toggleWishlist()">Show Wishlist</button>
+
+<div class="grid" id="grid"></div>
+
+<button id="backTop" onclick="scrollToTop()">↑</button>
+
+<!-- STATS -->
+<div id="statsBar">
+  <span id="statsText"></span>
+</div>
+
+<!-- RESET MODAL -->
+<div id="resetModal">
+  <div class="box">
+    <div style="font-size:18px;margin-bottom:10px;">⚙️ Reset Progress</div>
+    <div style="font-size:14px;color:#ccc;margin-bottom:20px;">
+      This will clear your entire collection.<br><br>
+      This cannot be undone.
+    </div>
+    <div class="actions">
+      <button class="cancel" onclick="closeResetModal()">Cancel</button>
+      <button class="confirm" onclick="confirmReset()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <img id="overlayImg">
+
+  <button id="downloadBtn" onclick="downloadImage()">
+    Download Image
+  </button>
+</div>
+
+<script>
+
+let saved = JSON.parse(localStorage.getItem("collection")) || {};
+let cards = [];
+let currentView = "normal";
+let showWishlist = false;
+let currentIndex = 0;
+
+const totals = { normal:165, poke:165, master:165, extra:45 };
+const names = { normal:"Normal", poke:"Pokéball", master:"Masterball", extra:"Extras" };
+
+function openResetModal(){ document.getElementById("resetModal").style.display="flex"; }
+function closeResetModal(){ document.getElementById("resetModal").style.display="none"; }
+function confirmReset(){ localStorage.removeItem("collection"); location.reload(); }
+function scrollToTop(){ window.scrollTo({top:0,behavior:"smooth"}); }
+
+function toggleWishlist(){ showWishlist=!showWishlist; render(); }
+
+function openOverlay(index){
+  currentIndex=index;
+  document.getElementById("overlay").style.display="flex";
+  updateOverlay();
+}
+
+function updateOverlay(){
+  document.getElementById("overlayImg").src =
+    cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
+}
+
+document.getElementById("overlay").onclick=()=> {
+  document.getElementById("overlay").style.display="none";
+};
+
+let startX=0;
+document.getElementById("overlay").addEventListener("touchstart",e=>{
+  startX=e.touches[0].clientX;
+});
+document.getElementById("overlay").addEventListener("touchend",e=>{
+  let endX=e.changedTouches[0].clientX;
+  if(endX-startX>50) currentIndex=Math.max(0,currentIndex-1);
+  if(startX-endX>50) currentIndex=Math.min(cards.length-1,currentIndex+1);
+  updateOverlay();
+});
+
+async function loadCards(){
+  const res = await fetch("https://api.pokemontcg.io/v2/cards?q=set.id:sv3pt5&pageSize=250");
+  const data = await res.json();
+
+  cards = data.data.map(c => ({
+    id: c.id,
+    num: parseInt(c.number) || 0,
+    data: c
+  })).sort((a,b)=>a.num-b.num);
+
+  const fix=[162,159,152,154,153,163,164,155,165,158,160,161,156,157];
+  let mid=cards.filter(c=>c.num>=152&&c.num<=165);
+  let reordered=[];
+  fix.forEach(n=>{
+    let f=mid.find(c=>c.num===n);
+    if(f) reordered.push(f);
+  });
+
+  cards=[...cards.filter(c=>c.num<152),...reordered,...cards.filter(c=>c.num>165)];
+
+  let main=cards.filter(c=>c.num<=165);
+  let extras=cards.filter(c=>c.num>165).sort((a,b)=>a.num-b.num);
+
+  extras.splice(15,0,{id:"promo-snorlax",data:{name:"Snorlax",images:{small:"https://i.postimg.cc/9Qr4BCBh/snorlax.png"}}});
+  extras.splice(17,0,{id:"promo-mewtwo",data:{name:"Mewtwo",images:{small:"https://i.postimg.cc/YCh4xMz1/mewtwo.png"}}});
+  extras.splice(39,0,{id:"promo-mewex",data:{name:"Mew ex",images:{small:"https://i.postimg.cc/c41trQg1/mew.png"}}});
+
+  cards=[...main,...extras];
+
+  let ex=cards.slice(165);
+  let moved=ex.splice(30,1)[0];
+  ex.splice(33,0,moved);
+  cards=[...cards.slice(0,165),...ex];
+
+  render();
+}
+
+function setView(v){
+  currentView=v;
+  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+v).classList.add("active");
+  render();
+}
+
+function render(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+
+  let count=0,totalOwned=0,wishlistCount=0;
+
+  cards.forEach((card,index)=>{
+    const key="card-"+(index+1);
+    if(!saved[key]) saved[key]={normal:false,poke:false,master:false,extra:false};
+
+    ["normal","poke","master","extra"].forEach(v=>{ if(saved[key][v]) totalOwned++; });
+
+    const displayNum=index+1;
+    const isExtra=displayNum>165;
+
+    if(currentView==="extra"&&!isExtra) return;
+    if(currentView!=="extra"&&isExtra) return;
+
+    const owned=saved[key][currentView];
+
+    if(!owned) wishlistCount++;
+    if(showWishlist&&owned) return;
+    if(owned) count++;
+
+    const div=document.createElement("div");
+    div.className="card";
+
+    div.innerHTML=`<div>#${displayNum} ${card.data.name}</div>`;
+
+    const img=document.createElement("img");
+    img.src=card.data.images.small;
+    img.onclick=()=>openOverlay(index);
+    div.appendChild(img);
+
+    const btn=document.createElement("button");
+    btn.className="card-btn";
+    btn.textContent=owned?"✔":"Needed";
+
+    let color="#fff",textColor="black";
+    if(currentView==="poke"){color="#e53935";textColor="white";}
+    if(currentView==="master"){color="#8e24aa";textColor="white";}
+    if(currentView==="extra"){color="#1e88e5";textColor="white";}
+
+    btn.style.background=owned?color:"#444";
+    btn.style.color=owned?textColor:"white";
+
+    btn.onclick=()=>{
+      saved[key][currentView]=!saved[key][currentView];
+      localStorage.setItem("collection",JSON.stringify(saved));
+      render();
+    };
+
+    div.appendChild(btn);
+    grid.appendChild(div);
+  });
+
+  const neededTab=totals[currentView]-count;
+  const neededTotal=540-totalOwned;
+
+  document.getElementById("progress").innerHTML =
+    names[currentView]+" "+count+" / "+totals[currentView]+" ("+neededTab+" needed)";
+
+  document.getElementById("totalText").innerHTML =
+    "Total "+totalOwned+" / 540 ("+neededTotal+" needed)";
+
+  const fill=document.getElementById("fill");
+  fill.style.width=(count/totals[currentView]*100)+"%";
+
+  let barColor="#fff";
+  if(currentView==="poke") barColor="#e53935";
+  if(currentView==="master") barColor="#8e24aa";
+  if(currentView==="extra") barColor="#1e88e5";
+  fill.style.background=barColor;
+
+  // 🔥 STATS BAR
+  const percent=Math.round((count/totals[currentView])*100);
+  document.getElementById("statsText").innerText =
+    percent+"% Complete • "+neededTab+" Needed • "+count+" Collected";
+  document.getElementById("statsBar").style.borderTop="2px solid "+barColor;
+
+  const wishBtn=document.getElementById("wishlistToggle");
+  let textColor=(currentView==="normal")?"black":"white";
+
+  wishBtn.textContent = showWishlist
+    ? `Showing Wishlist (${wishlistCount})`
+    : `Show Wishlist (${wishlistCount})`;
+
+  wishBtn.style.background = showWishlist ? barColor : "#444";
+  wishBtn.style.color = showWishlist ? textColor : "white";
+}
+
+function downloadImage(){
+  const url = cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = cards[currentIndex].data.name + ".jpg";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 loadCards();
