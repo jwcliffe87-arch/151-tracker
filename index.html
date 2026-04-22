@@ -54,6 +54,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
   grid-template-columns:repeat(3,1fr);
   gap:6px;
   padding:6px;
+  padding-bottom:60px;
 }
 
 .card {
@@ -102,7 +103,7 @@ button.card-btn {
 
 #backTop {
   position:fixed;
-  bottom:20px;
+  bottom:70px;
   right:20px;
   width:50px;
   height:50px;
@@ -116,6 +117,21 @@ button.card-btn {
   justify-content:center;
   z-index:999;
   opacity:0.8;
+}
+
+/* STATS BAR */
+#statsBar {
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#111;
+  color:#ccc;
+  font-size:13px;
+  text-align:center;
+  padding:8px 0;
+  z-index:998;
+  border-top:2px solid #333;
 }
 
 /* RESET MODAL */
@@ -154,7 +170,7 @@ button.card-btn {
 .cancel { background:#444; color:white; }
 .confirm { background:#e53935; color:white; }
 
-/* 🔥 OVERLAY */
+/* OVERLAY */
 #overlay {
   display:none;
   position:fixed;
@@ -170,7 +186,6 @@ button.card-btn {
   width:95%;
   max-height:95%;
 }
-
 </style>
 </head>
 
@@ -178,12 +193,9 @@ button.card-btn {
 
 <div class="header">
   <img src="logo.png" id="logo">
-
   <div id="totalText"></div>
   <div id="progress"></div>
-
   <div class="bar"><div class="fill" id="fill"></div></div>
-
   <button class="reset-icon" onclick="openResetModal()">⚙️</button>
 </div>
 
@@ -200,6 +212,11 @@ button.card-btn {
 
 <button id="backTop" onclick="scrollToTop()">↑</button>
 
+<!-- STATS -->
+<div id="statsBar">
+  <span id="statsText"></span>
+</div>
+
 <!-- RESET MODAL -->
 <div id="resetModal">
   <div class="box">
@@ -215,7 +232,6 @@ button.card-btn {
   </div>
 </div>
 
-<!-- 🔥 OVERLAY -->
 <div id="overlay">
   <img id="overlayImg">
 </div>
@@ -315,7 +331,6 @@ function render(){
   let count=0,totalOwned=0,wishlistCount=0;
 
   cards.forEach((card,index)=>{
-
     const key="card-"+(index+1);
     if(!saved[key]) saved[key]={normal:false,poke:false,master:false,extra:false};
 
@@ -382,6 +397,12 @@ function render(){
   if(currentView==="master") barColor="#8e24aa";
   if(currentView==="extra") barColor="#1e88e5";
   fill.style.background=barColor;
+
+  // 🔥 STATS BAR
+  const percent=Math.round((count/totals[currentView])*100);
+  document.getElementById("statsText").innerText =
+    percent+"% Complete • "+neededTab+" Needed • "+count+" Collected";
+  document.getElementById("statsBar").style.borderTop="2px solid "+barColor;
 
   const wishBtn=document.getElementById("wishlistToggle");
   let textColor=(currentView==="normal")?"black":"white";
