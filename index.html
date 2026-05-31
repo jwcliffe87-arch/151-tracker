@@ -201,6 +201,22 @@ button.card-btn {
   z-index:2001;
 }
 
+  #filterButtons{
+  display:flex;
+  gap:6px;
+  padding:0 6px;
+}
+
+#wishlistToggle,
+#inPostToggle{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:6px;
+  background:#444;
+  color:white;
+}
+  
 </style>
 </head>
 
@@ -221,7 +237,15 @@ button.card-btn {
   <button id="tab-extra" onclick="setView('extra')">Extras</button>
 </div>
 
-<button id="wishlistToggle" onclick="toggleWishlist()">Show Wishlist</button>
+<div id="filterButtons">
+  <button id="wishlistToggle" onclick="toggleWishlist()">
+    Show Wishlist
+  </button>
+
+  <button id="inPostToggle" onclick="toggleInPost()">
+    Show In Post
+  </button>
+</div>
 
 <div class="grid" id="grid"></div>
 
@@ -271,8 +295,25 @@ function closeResetModal(){ document.getElementById("resetModal").style.display=
 function confirmReset(){ localStorage.removeItem("collection"); location.reload(); }
 function scrollToTop(){ window.scrollTo({top:0,behavior:"smooth"}); }
 
-function toggleWishlist(){ showWishlist=!showWishlist; render(); }
+function toggleWishlist(){
+  showWishlist=!showWishlist;
 
+  if(showWishlist){
+    showInPost=false;
+  }
+
+  render();
+}
+
+function toggleInPost(){
+  showInPost=!showInPost;
+
+  if(showInPost){
+    showWishlist=false;
+  }
+
+  render();
+}
 function openOverlay(index){
   currentIndex=index;
   document.getElementById("overlay").style.display="flex";
