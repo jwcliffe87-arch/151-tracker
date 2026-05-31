@@ -513,14 +513,39 @@ function render(){
   document.getElementById("statsBar").style.borderTop="2px solid "+barColor;
 
   const wishBtn=document.getElementById("wishlistToggle");
-  let textColor=(currentView==="normal")?"black":"white";
+const inPostBtn=document.getElementById("inPostToggle");
 
-  wishBtn.textContent = showWishlist
-    ? `Showing Wishlist (${wishlistCount})`
-    : `Show Wishlist (${wishlistCount})`;
+let textColor=(currentView==="normal")?"black":"white";
+// Count cards currently In Post
+let inPostCount = 0;
 
-  wishBtn.style.background = showWishlist ? barColor : "#444";
-  wishBtn.style.color = showWishlist ? textColor : "white";
+cards.forEach((card,index)=>{
+  const key="card-"+(index+1);
+
+  if(saved[key] && saved[key][currentView]===1){
+    inPostCount++;
+  }
+});
+
+wishBtn.textContent = showWishlist
+  ? `Showing Wishlist (${wishlistCount})`
+  : `Show Wishlist (${wishlistCount})`;
+
+inPostBtn.textContent = showInPost
+  ? `Showing In Post (${inPostCount})`
+  : `Show In Post (${inPostCount})`;
+
+wishBtn.style.background = showWishlist ? barColor : "#444";
+wishBtn.style.color = showWishlist ? textColor : "white";
+
+inPostBtn.style.background = showInPost ? barColor : "#444";
+inPostBtn.style.color = showInPost ? textColor : "white";
+
+wishBtn.style.boxShadow =
+  showWishlist ? "0 0 10px " + barColor : "none";
+
+inPostBtn.style.boxShadow =
+  showInPost ? "0 0 10px " + barColor : "none";
 }
 
 function downloadImage(){
