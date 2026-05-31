@@ -407,13 +407,14 @@ function render(){
     const status=saved[key][currentView];
     
     if(status===0) wishlistCount++;
+
+    if(status===2) count++;
     
     if(showWishlist && status!==0) return;
     
     if(showInPost && status!==1) return;
     
-    if(status===2) count++;
-
+  
     const div=document.createElement("div");
     div.className="card";
 
