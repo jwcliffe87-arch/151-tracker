@@ -351,9 +351,11 @@ function render(){
 
   cards.forEach((card,index)=>{
     const key="card-"+(index+1);
-    if(!saved[key]) saved[key]={normal:false,poke:false,master:false,extra:false};
-
-    ["normal","poke","master","extra"].forEach(v=>{ if(saved[key][v]) totalOwned++; });
+    if(!saved[key]) saved[key]={normal:0,poke:0,master:0,extra:0};
+    
+    ["normal","poke","master","extra"].forEach(v=>{
+  if(saved[key][v]===2) totalOwned++;
+});
 
     const displayNum=index+1;
     const isExtra=displayNum>165;
@@ -361,11 +363,13 @@ function render(){
     if(currentView==="extra"&&!isExtra) return;
     if(currentView!=="extra"&&isExtra) return;
 
-    const owned=saved[key][currentView];
-
-    if(!owned) wishlistCount++;
-    if(showWishlist&&owned) return;
-    if(owned) count++;
+    const status=saved[key][currentView];
+    
+    if(status===0) wishlistCount++;
+    
+    if(showWishlist && status!==0) return;
+    
+    if(status===2) count++;
 
     const div=document.createElement("div");
     div.className="card";
@@ -379,18 +383,61 @@ function render(){
 
     const btn=document.createElement("button");
     btn.className="card-btn";
-    btn.textContent=owned?"✔":"Needed";
-
-    let color="#fff",textColor="black";
-    if(currentView==="poke"){color="#e53935";textColor="white";}
-    if(currentView==="master"){color="#8e24aa";textColor="white";}
-    if(currentView==="extra"){color="#1e88e5";textColor="white";}
-
-    btn.style.background=owned?color:"#444";
-    btn.style.color=owned?textColor:"white";
-
+    
+    let ownedColor="#ffffff";
+    let inPostColor="#bdbdbd";
+    let textColor="black";
+    
+    if(currentView==="poke"){
+      ownedColor="#e53935";
+      inPostColor="#ef9a9a";
+      textColor="white";
+    }
+    
+    if(currentView==="master"){
+      ownedColor="#8e24aa";
+      inPostColor="#ce93d8";
+      textColor="white";
+    }
+    
+    if(currentView==="extra"){
+      ownedColor="#1e88e5";
+      inPostColor="#90caf9";
+      textColor="white";
+    }
+    
+    const status=saved[key][currentView];
+    
+    if(status===0){
+      btn.textContent="Needed";
+      btn.style.background="#444";
+      btn.style.color="white";
+    }
+    
+    if(status===1){
+      btn.textContent="✉️ In Post";
+      btn.style.background=inPostColor;
+      btn.style.color=textColor;
+  }
+    
+    if(status===2){
+      btn.textContent="✔";
+      btn.style.background=ownedColor;
+      btn.style.color=textColor;
+    }
+    
     btn.onclick=()=>{
-      saved[key][currentView]=!saved[key][currentView];
+      
+      if(status===0){
+        saved[key][currentView]=1;
+      }
+      else if(status===1){
+        saved[key][currentView]=2;
+      }
+      else{
+        saved[key][currentView]=0;
+      }
+
       localStorage.setItem("collection",JSON.stringify(saved));
       render();
     };
