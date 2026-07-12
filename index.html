@@ -13,7 +13,7 @@ body { font-family: Arial; background:#0d0d0d; color:white; margin:0; }
 
 #logo {
   width:100%;
-  max-width:400px;
+  max-width:300px;
   margin:0 auto 10px auto;
   display:block;
 }
@@ -273,8 +273,8 @@ button.card-btn {
 <div id="overlay">
   <img id="overlayImg">
 
-  <button id="downloadBtn" onclick="downloadImage()">
-    Download Image
+  <button id="downloadBtn" onclick="searchEbay()">
+  🛒 Find on eBay
   </button>
 </div>
 
@@ -321,8 +321,19 @@ function openOverlay(index){
 }
 
 function updateOverlay(){
+
   document.getElementById("overlayImg").src =
     cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
+
+  const key = "card-" + (currentIndex + 1);
+  const btn = document.getElementById("downloadBtn");
+
+  if(saved[key][currentView] || saved[key][currentView + "_post"]){
+    btn.style.display = "none";
+  }else{
+    btn.style.display = "block";
+  }
+
 }
 
 document.getElementById("overlay").onclick=()=> {
@@ -407,14 +418,13 @@ function render(){
     const status=saved[key][currentView];
     
     if(status===0) wishlistCount++;
-
-    if(status===2) count++;
     
     if(showWishlist && status!==0) return;
     
     if(showInPost && status!==1) return;
     
-  
+    if(status===2) count++;
+
     const div=document.createElement("div");
     div.className="card";
 
@@ -549,15 +559,30 @@ inPostBtn.style.boxShadow =
   showInPost ? "0 0 10px " + barColor : "none";
 }
 
-function downloadImage(){
-  const url = cards[currentIndex].data.images.large || cards[currentIndex].data.images.small;
+function searchEbay(){
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = cards[currentIndex].data.name + ".jpg";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const card = cards[currentIndex].data;
+  const displayNum = currentIndex + 1;
+
+  let search = `Pokemon Korean 151 ${card.name} ${displayNum}`;
+
+  if(currentView === "poke"){
+    search += " Pokeball";
+  }
+
+  if(currentView === "master"){
+    search += " Masterball";
+  }
+
+  if(currentView === "extra"){
+    search += " Promo";
+  }
+
+  window.open(
+    "https://www.ebay.co.uk/sch/i.html?_nkw=" +
+    encodeURIComponent(search),
+    "_blank"
+  );
 }
 
 loadCards();
