@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0d0d">
-<title>151 Tracker v2.1.6</title>
+<title>151 Tracker</title>
 <link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:#0d0d0d;color:#fff;font-family:Arial,sans-serif}
-body{min-height:100vh;padding-bottom:66px}
+body{min-height:100vh;padding-bottom:52px}
 button{font:inherit;cursor:pointer}
 .header{padding:8px;text-align:center;position:relative}
 #logo{width:100%;max-width:300px;max-height:82px;object-fit:contain;margin:0 auto 6px;display:block}
@@ -27,11 +27,13 @@ button{font:inherit;cursor:pointer}
 .filter-row button{flex:1;padding:8px;border:0;border-radius:7px;background:#444;color:#fff}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px}
 .card{background:#1a1a1a;border-radius:10px;padding:6px;text-align:center;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.card.hidden{display:none!important}
 .card-name{height:48px;font-size:15px;overflow:hidden;display:flex;align-items:center;justify-content:center;line-height:1.15}
 .card img{width:100%;height:180px;object-fit:contain;background:#080808;border-radius:6px;margin:3px 0}
+.card img.img-error{opacity:.25}
 .card-btn{margin-top:4px;width:100%;padding:7px 3px;border:0;border-radius:6px;min-height:32px}
 .ebay-btn{margin-top:4px;width:100%;padding:6px 2px;border:0;border-radius:6px;background:#f5f5f5;color:#111;font-size:11px}
-#backTop{position:fixed;right:18px;bottom:76px;width:48px;height:48px;border:0;border-radius:50%;background:#333;color:#fff;font-size:20px;z-index:50;opacity:.9}
+#backTop{position:fixed;right:18px;bottom:64px;width:48px;height:48px;border:0;border-radius:50%;background:#333;color:#fff;font-size:20px;z-index:50;opacity:.9}
 #statsBar{position:fixed;bottom:0;left:0;width:100%;background:#111;color:#ccc;font-size:13px;text-align:center;padding:8px 0;z-index:40;border-top:2px solid #333}
 #resetModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;justify-content:center;align-items:center}
 #resetModal .box{background:#1a1a1a;padding:20px;border-radius:12px;width:82%;max-width:320px;text-align:center}
@@ -44,75 +46,250 @@ button{font:inherit;cursor:pointer}
 .overlay-actions{display:flex;gap:8px;position:absolute;bottom:26px;left:12px;right:12px;justify-content:center}
 .overlay-actions button{padding:10px 14px;border:0;border-radius:8px;background:#333;color:#fff}
 #overlayEbay{background:#f5f5f5;color:#111}
-#splash{position:fixed;inset:0;background:#050509;z-index:5000;display:flex;align-items:center;justify-content:center;transition:opacity .35s ease;animation:splashAutoHide 2.4s ease forwards;pointer-events:auto} @keyframes splashAutoHide{0%,78%{opacity:1;pointer-events:auto}100%{opacity:0;pointer-events:none;visibility:hidden}}
+#splash{position:fixed;inset:0;background:#050509;z-index:5000;display:flex;align-items:center;justify-content:center;animation:hideSplash 2.2s ease forwards;pointer-events:none}
 #splashImg{width:100%;height:100%;object-fit:contain;display:block}
-#splashFallback{display:none;text-align:center;padding:24px}
-#splashFallback h1{font-size:30px;margin:0 0 8px}
-#splashFallback p{color:#aaa;margin:0}
 #splashBar{position:absolute;left:15%;right:15%;bottom:10%;height:6px;background:#333;border-radius:5px;overflow:hidden}
-#splashFill{height:100%;width:0;background:#fff;transition:width .6s ease}
-.empty{grid-column:1/-1;text-align:center;color:#aaa;padding:40px 10px}
+#splashFill{height:100%;width:100%;background:#fff}
+@keyframes hideSplash{0%,72%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
 @media(min-width:700px){.grid{grid-template-columns:repeat(5,1fr)}.card img{height:220px}}
 </style>
 </head>
 <body>
-
-<div id="splash">
-  <img id="splashImg" src="splash.png" alt="" onerror="this.style.display='none';document.getElementById('splashFallback').style.display='block'">
-  <div id="splashFallback">
-    <h1>151 TRACKER</h1>
-    <p>Scarlet &amp; Violet 151 Korean Master Set</p>
-  </div>
-  <div id="splashBar"><div id="splashFill"></div></div>
-</div>
-
+<div id="splash"><img id="splashImg" src="splash.png" alt=""><div id="splashBar"><div id="splashFill"></div></div></div>
 <div class="header">
-  <img src="logo.png" id="logo" alt="151 Tracker" onerror="this.style.display='none'">
-  <div id="totalText"></div>
-  <div id="progress"></div>
-  <div class="bar"><div class="fill" id="fill"></div></div>
-  <button id="settingsBtn" onclick="openResetModal()" aria-label="Settings">⚙️</button>
+<img src="logo.png" id="logo" alt="151 Tracker" onerror="this.style.display='none'">
+<div id="totalText">Total 0 / 540 (540 needed)</div>
+<div id="progress">Normal 0 / 165 (165 needed)</div>
+<div class="bar"><div class="fill" id="fill"></div></div>
+<button id="settingsBtn" type="button" onclick="openResetModal()">⚙️</button>
 </div>
-
 <div class="tabs">
-  <button id="tab-normal" onclick="setView('normal')">Normal</button>
-  <button id="tab-poke" onclick="setView('poke')">Pokéball</button>
-  <button id="tab-master" onclick="setView('master')">Masterball</button>
-  <button id="tab-extra" onclick="setView('extra')">Extras</button>
+<button id="tab-normal" class="active" type="button" onclick="setView('normal')">Normal</button>
+<button id="tab-poke" type="button" onclick="setView('poke')">Pokéball</button>
+<button id="tab-master" type="button" onclick="setView('master')">Masterball</button>
+<button id="tab-extra" type="button" onclick="setView('extra')">Extras</button>
 </div>
-
 <div class="filter-row">
-  <button id="wishlistToggle" onclick="toggleWishlist()">Show Wishlist</button>
-  <button id="inPostToggle" onclick="toggleInPost()">Show In Post</button>
+<button id="wishlistToggle" type="button" onclick="toggleWishlist()">Show Wishlist</button>
+<button id="inPostToggle" type="button" onclick="toggleInPost()">Show In Post</button>
 </div>
-
-<div class="grid" id="grid"></div>
-<button id="backTop" onclick="scrollToTop()">↑</button>
-<div id="statsBar"><span id="statsText"></span></div>
-
-<div id="resetModal">
-  <div class="box">
-    <div style="font-size:18px;margin-bottom:10px">⚙️ Reset Progress</div>
-    <div style="font-size:14px;color:#ccc;margin-bottom:20px">
-      This will clear your entire collection.<br><br>This cannot be undone.
-    </div>
-    <div class="actions">
-      <button class="cancel" onclick="closeResetModal()">Cancel</button>
-      <button class="confirm" onclick="confirmReset()">Reset</button>
-    </div>
-  </div>
+<div class="grid" id="grid">
+<div class="card" data-index="0" data-group="normal" data-key="card-1">
+  <div class="card-name">#1 Bulbasaur</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/1.png" alt="Bulbasaur" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
-
-<div id="overlay">
-  <div class="overlay-title" id="overlayTitle"></div>
-  <img id="overlayImg" alt="">
-  <div class="overlay-actions">
-    <button onclick="closeOverlay()">Close</button>
-    <button id="overlayEbay" onclick="findOnEbay()">🛒 Find on eBay</button>
-  </div>
+<div class="card" data-index="1" data-group="normal" data-key="card-2">
+  <div class="card-name">#2 Ivysaur</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/2.png" alt="Ivysaur" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
-
-<script>
-"use strict";
-
-const CARD_DATA = [{"num":1,"name":"Bulbasaur","img":"https://images.pokemontcg.io/sv3pt5/1.png"},{"num":2,"name":"Ivysaur","img":"https://images.pokemontcg.io/sv3pt5/2.png"},{"num":3,"name":"Venusaur ex","img":"https://images.pokemontcg.io/sv3pt5/3.png"},{"num":4,"name":"Charmander","img":"https://images.pokemontcg.io/sv3pt5/4.png"},{"num":5,"name":"Charmeleon","img":"https://images.pokemontcg.io/sv3pt5/5.png"},{"num":6,"name":"Charizard ex","img":"https://images.pokemontcg.io/sv3pt5/6.png"},{"num":7,"name":"Squirtle","img":"https://images.pokemontcg.io/sv3pt5/7.png"},{"num":8,"name":"Wartortle","img":"https://images.pokemontcg.io/sv3pt5/8.png"},{"num":9,"name":"Blastoise ex","img":"https://images.pokemontcg.io/sv3pt5/9.png"},{"num":10,"name":"Caterpie","img":"https://images.pokemontcg.io/sv3pt5/10.png"},{"num":11,"name":"Metapod","img":"https://images.pokemontcg.io/sv3pt5/11.png"},{"num":12,"name":"Butterfree","img":"https://images.pokemontcg.io/sv3pt5/12.png"},{"num":13,"name":"Weedle","img":"https://images.pokemontcg.io/sv3pt5/13.png"},{"num":14,"name":"Kakuna","img":"https://images.pokemontcg.io/sv3pt5/14.png"},{"num":15,"name":"Beedrill","img":"https://images.pokemontcg.io/sv3pt5/15.png"},{"num":16,"name":"Pidgey","img":"https://images.pokemontcg.io/sv3pt5/16.png"},{"num":17,"name":"Pidgeotto","img":"https://images.pokemontcg.io/sv3pt5/17.png"},{"num":18,"name":"Pidgeot","img":"https://images.pokemontcg.io/sv3pt5/18.png"},{"num":19,"name":"Rattata","img":"https://images.pokemontcg.io/sv3pt5/19.png"},{"num":20,"name":"Raticate","img":"https://images.pokemontcg.io/sv3pt5/20.png"},{"num":21,"name":"Spearow","img":"https://images.pokemontcg.io/sv3pt5/21.png"},{"num":22,"name":"Fearow","img":"https://images.pokemontcg.io/sv3pt5/22.png"},{"num":23,"name":"Ekans","img":"https://images.pokemontcg.io/sv3pt5/23.png"},{"num":24,"name":"Arbok ex","img":"https://images.pokemontcg.io/sv3pt5/24.png"},{"num":25,"name":"Pikachu","img":"https://images.pokemontcg.io/sv3pt5/25.png"},{"num":26,"name":"Raichu","img":"https://images.pokemontcg.io/sv3pt5/26.png"},{"num":27,"name":"Sandshrew","img":"https://images.pokemontcg.io/sv3pt5/27.png"},{"num":28,"name":"Sandslash","img":"https://images.pokemontcg.io/sv3pt5/28.png"},{"num":29,"name":"Nidoran♀","img":"https://images.pokemontcg.io/sv3pt5/29.png"},{"num":30,"name":"Nidorina","img":"https://images.pokemontcg.io/sv3pt5/30.png"},{"num":31,"name":"Nidoqueen","img":"https://images.pokemontcg.io/sv3pt5/31.png"},{"num":32,"name":"Nidoran♂","img":"https://images.pokemontcg.io/sv3pt5/32.png"},{"num":33,"name":"Nidorino","img":"https://images.pokemontcg.io/sv3pt5/33.png"},{"num":34,"name":"Nidoking","img":"https://images.pokemontcg.io/sv3pt5/34.png"},{"num":35,"name":"Clefairy","img":"https://images.pokemontcg.io/sv3pt5/35.png"},{"num":36,"name":"Clefable","img":"https://images.pokemontcg.io/sv3pt5/36.png"},{"num":37,"name":"Vulpix","img":"https://images.pokemontcg.io/sv3pt5/37.png"},{"num":38,"name":"Ninetales ex","img":"https://images.pokemontcg.io/sv3pt5/38.png"},{"num":39,"name":"Jigglypuff","img":"https://images.pokemontcg.io/sv3pt5/39.png"},{"num":40,"name":"Wigglytuff ex","img":"https://images.pokemontcg.io/sv3pt5/40.png"},{"num":41,"name":"Zubat","img":"https://images.pokemontcg.io/sv3pt5/41.png"},{"num":42,"name":"Golbat","img":"https://images.pokemontcg.io/sv3pt5/42.png"},{"num":43,"name":"Oddish","img":"https://images.pokemontcg.io/sv3pt5/43.png"},{"num":44,"name":"Gloom","img":"https://images.pokemontcg.io/sv3pt5/44.png"},{"num":45,"name":"Vileplume","img":"https://images.pokemontcg.io/sv3pt5/45.png"},{"num":46,"name":"Paras","img":"https://images.pokemontcg.io/sv3pt5/46.png"},{"num":47,"name":"Parasect","img":"https://images.pokemontcg.io/sv3pt5/47.png"},{"num":48,"name":"Venonat","img":"https://images.pokemontcg.io/sv3pt5/48.png"},{"num":49,"name":"Venomoth","img":"https://images.pokemontcg.io/sv3pt5/49.png"},{"num":50,"name":"Diglett","img":"https://images.pokemontcg.io/sv3pt5/50.png"},{"num":51,"name":"Dugtrio","img":"https://images.pokemontcg.io/sv3pt5/51.png"},{"num":52,"name":"Meowth","img":"https://images.pokemontcg.io/sv3pt5/52.png"},{"num":53,"name":"Persian","img":"https://images.pokemontcg.io/sv3pt5/53.png"},{"num":54,"name":"Psyduck","img":"https://images.pokemontcg.io/sv3pt5/54.png"},{"num":55,"name":"Golduck","img":"https://images.pokemontcg.io/sv3pt5/55.png"},{"num":56,"name":"Mankey","img":"https://images.pokemontcg.io/sv3pt5/56.png"},{"num":57,"name":"Primeape","img":"https://images.pokemontcg.io/sv3pt5/57.png"},{"num":58,"name":"Growlithe","img":"https://images.pokemontcg.io/sv3pt5/58.png"},{"num":59,"name":"Arcanine","img":"https://images.pokemontcg.io/sv3pt5/59.png"},{"num":60,"name":"Poliwag","img":"https://images.pokemontcg.io/sv3pt5/60.png"},{"num":61,"name":"Poliwhirl","img":"https://images.pokemontcg.io/sv3pt5/61.png"},{"num":62,"name":"Poliwrath","img":"https://images.pokemontcg.io/sv3pt5/62.png"},{"num":63,"name":"Abra","img":"https://images.pokemontcg.io/sv3pt5/63.png"},{"num":64,"name":"Kadabra","img":"https://images.pokemontcg.io/sv3pt5/64.png"},{"num":65,"name":"Alakazam ex","img":"https://images.pokemontcg.io/sv3pt5/65.png"},{"num":66,"name":"Machop","img":"https://images.pokemontcg.io/sv3pt5/66.png"},{"num":67,"name":"Machoke","img":"https://images.pokemontcg.io/sv3pt5/67.png"},{"num":68,"name":"Machamp","img":"https://images.pokemontcg.io/sv3pt5/68.png"},{"num":69,"name":"Bellsprout","img":"https://images.pokemontcg.io/sv3pt5/69.png"},{"num":70,"name":"Weepinbell","img":"https://images.pokemontcg.io/sv3pt5/70.png"},{"num":71,"name":"Victreebel","img":"https://images.pokemontcg.io/sv3pt5/71.png"},{"num":72,"name":"Tentacool","img":"https://images.pokemontcg.io/sv3pt5/72.png"},{"num":73,"name":"Tentacruel","img":"https://images.pokemontcg.io/sv3pt5/73.png"},{"num":74,"name":"Geodude","img":"https://images.pokemontcg.io/sv3pt5/74.png"},{"num":75,"name":"Graveler","img":"https://images.pokemontcg.io/sv3pt5/75.png"},{"num":76,"name":"Golem ex","img":"https://images.pokemontcg.io/sv3pt5/76.png"},{"num":77,"name":"Ponyta","img":"https://images.pokemontcg.io/sv3pt5/77.png"},{"num":78,"name":"Rapidash","img":"https://images.pokemontcg.io/sv3pt5/78.png"},{"num":79,"name":"Slowpoke","img":"https://images.pokemontcg.io/sv3pt5/79.png"},{"num":80,"name":"Slowbro","img":"https://images.pokemontcg.io/sv3pt5/80.png"},{"num":81,"name":"Magnemite","img":"https://images.pokemontcg.io/sv3pt5/81.png"},{"num":82,"name":"Magneton","img":"https://images.pokemontcg.io/sv3pt5/82.png"},{"num":83,"name":"Farfetch’d","img":"https://images.pokemontcg.io/sv3pt5/83.png"},{"num":84,"name":"Doduo","img":"https://images.pokemontcg.io/sv3pt5/84.png"},{"num":85,"name":"Dodrio","img":"https://images.pokemontcg.io/sv3pt5/85.png"},{"num":86,"name":"Seel","img":"https://images.pokemontcg.io/sv3pt5/86.png"},{"num":87,"name":"Dewgong","img":"https://images.pokemontcg.io/sv3pt5/87.png"},{"num":88,"name":"Grimer","img":"https://images.pokemontcg.io/sv3pt5/88.png"},{"num":89,"name":"Muk","img":"https://images.pokemontcg.io/sv3pt5/89.png"},{"num":90,"name":"Shellder","img":"https://images.pokemontcg.io/sv3pt5/90.png"},{"num":91,"name":"Cloyster","img":"https://images.pokemontcg.io/sv3pt5/91.png"},{"num":92,"name":"Gastly","img":"https://images.pokemontcg.io/sv3pt5/92.png"},{"num":93,"name":"Haunter","img":"https://images.pokemontcg.io/sv3pt5/93.png"},{"num":94,"name":"Gengar","img":"https://images.pokemontcg.io/sv3pt5/94.png"},{"num":95,"name":"Onix","img":"https://images.pokemontcg.io/sv3pt5/95.png"},{"num":96,"name":"Drowzee","img":"https://images.pokemontcg.io/sv3pt5/96.png"},{"num":97,"name":"Hypno","img":"https://images.pokemontcg.io/sv3pt5/97.png"},{"num":98,"name":"Krabby","img":"https://images.pokemontcg.io/sv3pt5/98.png"},{"num":99,"name":"Kingler","img":"https://images.pokemontcg.io/sv3pt5/99.png"},{"num":100,"name":"Voltorb","img":"https://images.pokemontcg.io/sv3pt5/100.png"},{"num":101,"name":"Electrode","img":"https://images.pokemontcg.io/sv3pt5/101.png"},{"num":102,"name":"Exeggcute","img":"https://images.pokemontcg.io/sv3pt5/102.png"},{"num":103,"name":"Exeggutor","img":"https://images.pokemontcg.io/sv3pt5/103.png"},{"num":104,"name":"Cubone","img":"https://images.pokemontcg.io/sv3pt5/104.png"},{"num":105,"name":"Marowak","img":"https://images.pokemontcg.io/sv3pt5/105.png"},{"num":106,"name":"Hitmonlee","img":"https://images.pokemontcg.io/sv3pt5/106.png"},{"num":107,"name":"Hitmonchan","img":"https://images.pokemontcg.io/sv3pt5/107.png"},{"num":108,"name":"Lickitung","img":"https://images.pokemontcg.io/sv3pt5/108.png"},{"num":109,"name":"Koffing","img":"https://images.pokemontcg.io/sv3pt5/109.png"},{"num":110,"name":"Weezing","img":"https://images.pokemontcg.io/sv3pt5/110.png"},{"num":111,"name":"Rhyhorn","img":"https://images.pokemontcg.io/sv3pt5/111.png"},{"num":112,"name":"Rhydon","img":"https://images.pokemontcg.io/sv3pt5/112.png"},{"num":113,"name":"Chansey","img":"https://images.pokemontcg.io/sv3pt5/113.png"},{"num":114,"name":"Tangela","img":"https://images.pokemontcg.io/sv3pt5/114.png"},{"num":115,"name":"Kangaskhan ex","img":"https://images.pokemontcg.io/sv3pt5/115.png"},{"num":116,"name":"Horsea","img":"https://images.pokemontcg.io/sv3pt5/116.png"},{"num":117,"name":"Seadra","img":"https://images.pokemontcg.io/sv3pt5/117.png"},{"num":118,"name":"Goldeen","img":"https://images.pokemontcg.io/sv3pt5/118.png"},{"num":119,"name":"Seaking","img":"https://images.pokemontcg.io/sv3pt5/119.png"},{"num":120,"name":"Staryu","img":"https://images.pokemontcg.io/sv3pt5/120.png"},{"num":121,"name":"Starmie","img":"https://images.pokemontcg.io/sv3pt5/121.png"},{"num":122,"name":"Mr. Mime","img":"https://images.pokemontcg.io/sv3pt5/122.png"},{"num":123,"name":"Scyther","img":"https://images.pokemontcg.io/sv3pt5/123.png"},{"num":124,"name":"Jynx ex","img":"https://images.pokemontcg.io/sv3pt5/124.png"},{"num":125,"name":"Electabuzz","img":"https://images.pokemontcg.io/sv3pt5/125.png"},{"num":126,"name":"Magmar","img":"https://images.pokemontcg.io/sv3pt5/126.png"},{"num":127,"name":"Pinsir","img":"https://images.pokemontcg.io/sv3pt5/127.png"},{"num":128,"name":"Tauros","img":"https://images.pokemontcg.io/sv3pt5/128.png"},{"num":129,"name":"Magikarp","img":"https://images.pokemontcg.io/sv3pt5/129.png"},{"num":130,"name":"Gyarados","img":"https://images.pokemontcg.io/sv3pt5/130.png"},{"num":131,"name":"Lapras","img":"https://images.pokemontcg.io/sv3pt5/131.png"},{"num":132,"name":"Ditto","img":"https://images.pokemontcg.io/sv3pt5/132.png"},{"num":133,"name":"Eevee","img":"https://images.pokemontcg.io/sv3pt5/133.png"},{"num":134,"name":"Vaporeon","img":"https://images.pokemontcg.io/sv3pt5/134.png"},{"num":135,"name":"Jolteon","img":"https://images.pokemontcg.io/sv3pt5/135.png"},{"num":136,"name":"Flareon","img":"https://images.pokemontcg.io/sv3pt5/136.png"},{"num":137,"name":"Porygon","img":"https://images.pokemontcg.io/sv3pt5/137.png"},{"num":138,"name":"Omanyte","img":"https://images.pokemontcg.io/sv3pt5/138.png"},{"num":139,"name":"Omastar","img":"https://images.pokemontcg.io/sv3pt5/139.png"},{"num":140,"name":"Kabuto","img":"https://images.pokemontcg.io/sv3pt5/140.png"},{"num":141,"name":"Kabutops","img":"https://images.pokemontcg.io/sv3pt5/141.png"},{"num":142,"name":"Aerodactyl","img":"https://images.pokemontcg.io/sv3pt5/142.png"},{"num":143,"name":"Snorlax","img":"https://images.pokemontcg.io/sv3pt5/143.png"},{"num":144,"name":"Articuno","img":"https://images.pokemontcg.io/sv3pt5/144.png"},{"num":145,"name":"Zapdos ex","img":"https://images.pokemontcg.io/sv3pt5/145.png"},{"num":146,"name":"Moltres","img":"https://images.pokemontcg.io/sv3pt5/146.png"},{"num":147,"name":"Dratini","img":"https://images.pokemontcg.io/sv3pt5/147.png"},{"num":148,"name":"Dragonair","img":"https://images.pokemontcg.io/sv3pt5/148.png"},{"num":149,"name":"Dragonite","img":"https://images.pokemontcg.io/sv3pt5/149.png"},{"num":150,"name":"Mewtwo","img":"https://images.pokemontcg.io/sv3pt5/150.png"},{"num":151,"name":"Mew ex","img":"https://images.pokemontcg.io/sv3pt5/151.png"},{"num":162,"name":"Grabber","img":"https://images.pokemontcg.io/sv3pt5/162.png"},{"num":159,"name":"Energy Sticker","img":"https://images.pokemontcg.io/sv3pt5/159.png"},{"num":152,"name":"Antique Dome Fossil","img":"https://images.pokemontcg.io/sv3pt5/152.png"},{"num":154,"name":"Antique Old Amber","img":"https://images.pokemontcg.io/sv3pt5/154.png"},{"num":153,"name":"Antique Helix Fossil","img":"https://images.pokemontcg.io/sv3pt5/153.png"},{"num":163,"name":"Leftovers","img":"https://images.pokemontcg.io/sv3pt5/163.png"},{"num":164,"name":"Protective Goggles","img":"https://images.pokemontcg.io/sv3pt5/164.png"},{"num":155,"name":"Big Air Balloon","img":"https://images.pokemontcg.io/sv3pt5/155.png"},{"num":165,"name":"Rigid Band","img":"https://images.pokemontcg.io/sv3pt5/165.png"},{"num":158,"name":"Daisy's Help","img":"https://images.pokemontcg.io/sv3pt5/158.png"},{"num":160,"name":"Erika's Invitation","img":"https://images.pokemontcg.io/sv3pt5/160.png"},{"num":161,"name":"Giovanni's Charisma","img":"https://images.pokemontcg.io/sv3pt5/161.png"},{"num":156,"name":"Bill's Transfer","img":"https://images.pokemontcg.io/sv3pt5/156.png"},{"num":157,"name":"Cycling Road","img":"https://images.pokemontcg.io/sv3pt5/157.png"},{"num":166,"name":"Bulbasaur","img":"https://images.pokemontcg.io/sv3pt5/166.png"},{"num":167,"name":"Ivysaur","img":
+<div class="card" data-index="2" data-group="normal" data-key="card-3">
+  <div class="card-name">#3 Venusaur ex</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/3.png" alt="Venusaur ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="3" data-group="normal" data-key="card-4">
+  <div class="card-name">#4 Charmander</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/4.png" alt="Charmander" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="4" data-group="normal" data-key="card-5">
+  <div class="card-name">#5 Charmeleon</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/5.png" alt="Charmeleon" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="5" data-group="normal" data-key="card-6">
+  <div class="card-name">#6 Charizard ex</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/6.png" alt="Charizard ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="6" data-group="normal" data-key="card-7">
+  <div class="card-name">#7 Squirtle</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/7.png" alt="Squirtle" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="7" data-group="normal" data-key="card-8">
+  <div class="card-name">#8 Wartortle</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/8.png" alt="Wartortle" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="8" data-group="normal" data-key="card-9">
+  <div class="card-name">#9 Blastoise ex</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/9.png" alt="Blastoise ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="9" data-group="normal" data-key="card-10">
+  <div class="card-name">#10 Caterpie</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/10.png" alt="Caterpie" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="10" data-group="normal" data-key="card-11">
+  <div class="card-name">#11 Metapod</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/11.png" alt="Metapod" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="11" data-group="normal" data-key="card-12">
+  <div class="card-name">#12 Butterfree</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/12.png" alt="Butterfree" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="12" data-group="normal" data-key="card-13">
+  <div class="card-name">#13 Weedle</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/13.png" alt="Weedle" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="13" data-group="normal" data-key="card-14">
+  <div class="card-name">#14 Kakuna</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/14.png" alt="Kakuna" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="14" data-group="normal" data-key="card-15">
+  <div class="card-name">#15 Beedrill</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/15.png" alt="Beedrill" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="15" data-group="normal" data-key="card-16">
+  <div class="card-name">#16 Pidgey</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/16.png" alt="Pidgey" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="16" data-group="normal" data-key="card-17">
+  <div class="card-name">#17 Pidgeotto</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/17.png" alt="Pidgeotto" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="17" data-group="normal" data-key="card-18">
+  <div class="card-name">#18 Pidgeot</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/18.png" alt="Pidgeot" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="18" data-group="normal" data-key="card-19">
+  <div class="card-name">#19 Rattata</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/19.png" alt="Rattata" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="19" data-group="normal" data-key="card-20">
+  <div class="card-name">#20 Raticate</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/20.png" alt="Raticate" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="20" data-group="normal" data-key="card-21">
+  <div class="card-name">#21 Spearow</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/21.png" alt="Spearow" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="21" data-group="normal" data-key="card-22">
+  <div class="card-name">#22 Fearow</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/22.png" alt="Fearow" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="22" data-group="normal" data-key="card-23">
+  <div class="card-name">#23 Ekans</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/23.png" alt="Ekans" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="23" data-group="normal" data-key="card-24">
+  <div class="card-name">#24 Arbok ex</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/24.png" alt="Arbok ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="24" data-group="normal" data-key="card-25">
+  <div class="card-name">#25 Pikachu</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/25.png" alt="Pikachu" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="25" data-group="normal" data-key="card-26">
+  <div class="card-name">#26 Raichu</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/26.png" alt="Raichu" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="26" data-group="normal" data-key="card-27">
+  <div class="card-name">#27 Sandshrew</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/27.png" alt="Sandshrew" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="27" data-group="normal" data-key="card-28">
+  <div class="card-name">#28 Sandslash</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/28.png" alt="Sandslash" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="28" data-group="normal" data-key="card-29">
+  <div class="card-name">#29 Nidoran♀</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/29.png" alt="Nidoran♀" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="29" data-group="normal" data-key="card-30">
+  <div class="card-name">#30 Nidorina</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/30.png" alt="Nidorina" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="30" data-group="normal" data-key="card-31">
+  <div class="card-name">#31 Nidoqueen</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/31.png" alt="Nidoqueen" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="31" data-group="normal" data-key="card-32">
+  <div class="card-name">#32 Nidoran♂</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/32.png" alt="Nidoran♂" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="32" data-group="normal" data-key="card-33">
+  <div class="card-name">#33 Nidorino</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/33.png" alt="Nidorino" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="33" data-group="normal" data-key="card-34">
+  <div class="card-name">#34 Nidoking</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/34.png" alt="Nidoking" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="34" data-group="normal" data-key="card-35">
+  <div class="card-name">#35 Clefairy</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/35.png" alt="Clefairy" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="35" data-group="normal" data-key="card-36">
+  <div class="card-name">#36 Clefable</div>
+  <img src="https://images.pokemontcg.io/sv3pt5/36.png" alt="Clefable" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <button class="card-btn status-btn" type="button">Needed</button>
+  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
+</div>
+<div class="card" data-index="36" data-group="normal" data-key="card-37">
+  <div class="card-name">#37 Vulpix</div>
+  <img src="https://images.pokemontcg.io
