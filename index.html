@@ -17,7 +17,7 @@ button{font:inherit;cursor:pointer}
 .bar{height:10px;background:#333;border-radius:6px;overflow:hidden;margin-top:6px}
 .fill{height:100%;width:0;transition:width .25s ease}
 .tabs{display:flex;gap:5px;padding:6px;position:sticky;top:0;background:#0d0d0d;z-index:20}
-.tabs button{flex:1;padding:9px 4px;border:0;border-radius:7px;background:#333;color:#fff;font-size:13px}
+.tabs button,.tabs a{flex:1;padding:9px 4px;border:0;border-radius:7px;background:#333;color:#fff;font-size:13px}
 .tabs button.active{box-shadow:0 0 10px currentColor}
 #tab-normal.active{background:#fff;color:#000}
 #tab-poke.active{background:#e53935}
@@ -52,6 +52,13 @@ button{font:inherit;cursor:pointer}
 #splashFill{height:100%;width:100%;background:#fff}
 @keyframes hideSplash{0%,72%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden}}
 @media(min-width:700px){.grid{grid-template-columns:repeat(5,1fr)}.card img{height:220px}}
+
+.tabs a{display:flex;align-items:center;justify-content:center;text-decoration:none;color:#fff;background:#333;border-radius:8px;padding:9px 4px;}
+.tabs a.active{background:#fff;color:#111;}
+.card-section{display:none;}
+.card-section:target{display:grid;}
+.card-section#normal{display:grid;}
+.card-section:target ~ .card-section{display:none;}
 </style>
 </head>
 <body>
@@ -64,10 +71,10 @@ button{font:inherit;cursor:pointer}
 <button id="settingsBtn" type="button" onclick="openResetModal()">⚙️</button>
 </div>
 <div class="tabs">
-<button id="tab-normal" class="active" type="button" data-view="normal">Normal</button>
-<button id="tab-poke" type="button" data-view="poke">Pokéball</button>
-<button id="tab-master" type="button" data-view="master">Masterball</button>
-<button id="tab-extra" type="button" data-view="extra">Extras</button>
+<a id="tab-normal" class="active" href="#normal" onclick="setView('normal');return false;">Normal</a>
+<a id="tab-poke" href="#poke" onclick="setView('poke');return false;">Pokéball</a>
+<a id="tab-master" href="#master" onclick="setView('master');return false;">Masterball</a>
+<a id="tab-extra" href="#extra" onclick="setView('extra');return false;">Extras</a>
 </div>
 <div class="filter-row">
 <button id="wishlistToggle" type="button">Show Wishlist</button>
@@ -76,220 +83,214 @@ button{font:inherit;cursor:pointer}
 <div class="grid" id="grid">
 <div class="card" data-index="0" data-group="normal" data-key="card-1">
   <div class="card-name">#1 Bulbasaur</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/1.png" alt="Bulbasaur" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/1.png" alt="Bulbasaur" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="1" data-group="normal" data-key="card-2">
   <div class="card-name">#2 Ivysaur</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/2.png" alt="Ivysaur" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/2.png" alt="Ivysaur" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="2" data-group="normal" data-key="card-3">
   <div class="card-name">#3 Venusaur ex</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/3.png" alt="Venusaur ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/3.png" alt="Venusaur ex" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="3" data-group="normal" data-key="card-4">
   <div class="card-name">#4 Charmander</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/4.png" alt="Charmander" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/4.png" alt="Charmander" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="4" data-group="normal" data-key="card-5">
   <div class="card-name">#5 Charmeleon</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/5.png" alt="Charmeleon" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/5.png" alt="Charmeleon" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="5" data-group="normal" data-key="card-6">
   <div class="card-name">#6 Charizard ex</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/6.png" alt="Charizard ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/6.png" alt="Charizard ex" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="6" data-group="normal" data-key="card-7">
   <div class="card-name">#7 Squirtle</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/7.png" alt="Squirtle" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/7.png" alt="Squirtle" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="7" data-group="normal" data-key="card-8">
   <div class="card-name">#8 Wartortle</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/8.png" alt="Wartortle" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/8.png" alt="Wartortle" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="8" data-group="normal" data-key="card-9">
   <div class="card-name">#9 Blastoise ex</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/9.png" alt="Blastoise ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/9.png" alt="Blastoise ex" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="9" data-group="normal" data-key="card-10">
   <div class="card-name">#10 Caterpie</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/10.png" alt="Caterpie" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/10.png" alt="Caterpie" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="10" data-group="normal" data-key="card-11">
   <div class="card-name">#11 Metapod</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/11.png" alt="Metapod" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/11.png" alt="Metapod" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="11" data-group="normal" data-key="card-12">
   <div class="card-name">#12 Butterfree</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/12.png" alt="Butterfree" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/12.png" alt="Butterfree" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="12" data-group="normal" data-key="card-13">
   <div class="card-name">#13 Weedle</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/13.png" alt="Weedle" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/13.png" alt="Weedle" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="13" data-group="normal" data-key="card-14">
   <div class="card-name">#14 Kakuna</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/14.png" alt="Kakuna" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/14.png" alt="Kakuna" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="14" data-group="normal" data-key="card-15">
   <div class="card-name">#15 Beedrill</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/15.png" alt="Beedrill" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/15.png" alt="Beedrill" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="15" data-group="normal" data-key="card-16">
   <div class="card-name">#16 Pidgey</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/16.png" alt="Pidgey" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/16.png" alt="Pidgey" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="16" data-group="normal" data-key="card-17">
   <div class="card-name">#17 Pidgeotto</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/17.png" alt="Pidgeotto" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/17.png" alt="Pidgeotto" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="17" data-group="normal" data-key="card-18">
   <div class="card-name">#18 Pidgeot</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/18.png" alt="Pidgeot" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/18.png" alt="Pidgeot" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="18" data-group="normal" data-key="card-19">
   <div class="card-name">#19 Rattata</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/19.png" alt="Rattata" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/19.png" alt="Rattata" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="19" data-group="normal" data-key="card-20">
   <div class="card-name">#20 Raticate</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/20.png" alt="Raticate" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/20.png" alt="Raticate" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="20" data-group="normal" data-key="card-21">
   <div class="card-name">#21 Spearow</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/21.png" alt="Spearow" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/21.png" alt="Spearow" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="21" data-group="normal" data-key="card-22">
   <div class="card-name">#22 Fearow</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/22.png" alt="Fearow" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/22.png" alt="Fearow" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="22" data-group="normal" data-key="card-23">
   <div class="card-name">#23 Ekans</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/23.png" alt="Ekans" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/23.png" alt="Ekans" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="23" data-group="normal" data-key="card-24">
   <div class="card-name">#24 Arbok ex</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/24.png" alt="Arbok ex" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/24.png" alt="Arbok ex" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="24" data-group="normal" data-key="card-25">
   <div class="card-name">#25 Pikachu</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/25.png" alt="Pikachu" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/25.png" alt="Pikachu" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="25" data-group="normal" data-key="card-26">
   <div class="card-name">#26 Raichu</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/26.png" alt="Raichu" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/26.png" alt="Raichu" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="26" data-group="normal" data-key="card-27">
   <div class="card-name">#27 Sandshrew</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/27.png" alt="Sandshrew" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/27.png" alt="Sandshrew" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="27" data-group="normal" data-key="card-28">
   <div class="card-name">#28 Sandslash</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/28.png" alt="Sandslash" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/28.png" alt="Sandslash" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="28" data-group="normal" data-key="card-29">
   <div class="card-name">#29 Nidoran♀</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/29.png" alt="Nidoran♀" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/29.png" alt="Nidoran♀" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="29" data-group="normal" data-key="card-30">
   <div class="card-name">#30 Nidorina</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/30.png" alt="Nidorina" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/30.png" alt="Nidorina" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="30" data-group="normal" data-key="card-31">
   <div class="card-name">#31 Nidoqueen</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/31.png" alt="Nidoqueen" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/31.png" alt="Nidoqueen" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="31" data-group="normal" data-key="card-32">
   <div class="card-name">#32 Nidoran♂</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/32.png" alt="Nidoran♂" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/32.png" alt="Nidoran♂" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="32" data-group="normal" data-key="card-33">
   <div class="card-name">#33 Nidorino</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/33.png" alt="Nidorino" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/33.png" alt="Nidorino" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="33" data-group="normal" data-key="card-34">
   <div class="card-name">#34 Nidoking</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/34.png" alt="Nidoking" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/34.png" alt="Nidoking" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="34" data-group="normal" data-key="card-35">
   <div class="card-name">#35 Clefairy</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/35.png" alt="Clefairy" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
+  <img src="https://images.pokemontcg.io/sv3pt5/35.png" alt="Clefairy" loading="eager" decoding="async" onerror="this.classList.add('img-error')">
   <button class="card-btn status-btn" type="button">Needed</button>
   <button class="ebay-btn" type="button">🛒 Find on eBay</button>
 </div>
 <div class="card" data-index="35" data-group="normal" data-key="card-36">
   <div class="card-name">#36 Clefable</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/36.png" alt="Clefable" loading="lazy" decoding="async" onerror="this.classList.add('img-error')">
-  <button class="card-btn status-btn" type="button">Needed</button>
-  <button class="ebay-btn" type="button">🛒 Find on eBay</button>
-</div>
-<div class="card" data-index="36" data-group="normal" data-key="card-37">
-  <div class="card-name">#37 Vulpix</div>
-  <img src="https://images.pokemontcg.io/sv3pt5/37.png" alt="Vulpix" loading="lazy" decoding="async" onerror="this.classList.add
+  <img src="https://images.pokemontcg.io/sv3pt5/36.png" alt="Clefable" loading="eager" dec
