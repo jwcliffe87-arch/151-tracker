@@ -64,14 +64,14 @@ button{font:inherit;cursor:pointer}
 <button id="settingsBtn" type="button" onclick="openResetModal()">⚙️</button>
 </div>
 <div class="tabs">
-<button id="tab-normal" class="active" type="button" onclick="setView('normal')">Normal</button>
-<button id="tab-poke" type="button" onclick="setView('poke')">Pokéball</button>
-<button id="tab-master" type="button" onclick="setView('master')">Masterball</button>
-<button id="tab-extra" type="button" onclick="setView('extra')">Extras</button>
+<button id="tab-normal" class="active" type="button" data-view="normal">Normal</button>
+<button id="tab-poke" type="button" data-view="poke">Pokéball</button>
+<button id="tab-master" type="button" data-view="master">Masterball</button>
+<button id="tab-extra" type="button" data-view="extra">Extras</button>
 </div>
 <div class="filter-row">
-<button id="wishlistToggle" type="button" onclick="toggleWishlist()">Show Wishlist</button>
-<button id="inPostToggle" type="button" onclick="toggleInPost()">Show In Post</button>
+<button id="wishlistToggle" type="button">Show Wishlist</button>
+<button id="inPostToggle" type="button">Show In Post</button>
 </div>
 <div class="grid" id="grid">
 <div class="card" data-index="0" data-group="normal" data-key="card-1">
@@ -292,4 +292,4 @@ button{font:inherit;cursor:pointer}
 </div>
 <div class="card" data-index="36" data-group="normal" data-key="card-37">
   <div class="card-name">#37 Vulpix</div>
-  <img src="https://images.pokemontcg.io
+  <img src="https://images.pokemontcg.io/sv3pt5/37.png" alt="Vulpix" loading="lazy" decoding="async" onerror="this.classList.add
